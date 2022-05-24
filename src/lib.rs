@@ -75,7 +75,7 @@ impl Summary {
                 } else {
                     let idx =
                         fields[6..].iter().position(|&x| x == "1").unwrap();
-                    if idx > ret.corr.len() {
+                    if idx >= ret.corr.len() {
                         ret.corr.resize(idx + 1, 0.0);
                     }
                     ret.corr[idx] = fields[2].parse().unwrap();
