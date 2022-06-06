@@ -20,7 +20,10 @@ pub struct Summary {
 
 impl Summary {
     pub fn new(filename: &str) -> Self {
-        let f = std::fs::File::open(filename).unwrap();
+        let f = match std::fs::File::open(filename) {
+            Ok(f) => f,
+            Err(e) => panic!("failed to open {} with '{}'", filename, e),
+        };
         let lines = BufReader::new(f).lines().flatten();
         #[derive(PartialEq)]
         enum State {
@@ -87,7 +90,7 @@ impl Summary {
                             one = true;
                         }
                     }
-                    if idx > ret.corr.len() {
+                    if idx >= ret.corr.len() {
                         ret.corr.resize(idx + 1, 0.0);
                     }
                     ret.corr[idx] = cur_freq;
