@@ -31,6 +31,10 @@ impl Summary {
         let mut state = State::None;
         let mut skip = 0;
         let mut ret = Self::default();
+        // these are for multi-line state descriptions
+        let mut vib_states = Vec::new();
+        let mut cur_zpt = 0.0;
+        let mut cur_freq = 0.0;
         'outer: for line in lines {
             if skip > 0 {
                 skip -= 1;
@@ -55,27 +59,38 @@ impl Summary {
             {
                 state = State::None;
             } else if state == State::Corr && line.contains("NON-DEG (Vs)") {
-                // TODO handle multi-line state descriptions, simple for now
+                vib_states = Vec::new();
                 let fields: Vec<_> = line.split_whitespace().collect();
-                {
-                    let mut one = false;
-                    for f in &fields[6..] {
-                        if *f == "2" || (one && *f == "1") {
-                            continue 'outer;
-                        } else if *f == "1" {
-                            one = true;
-                        } // append to state vector here when I add that
-                    }
-                }
-                if fields[6..].iter().all(|s| *s == "0") {
-                    ret.zpt = fields[1].parse().unwrap();
+                vib_states.extend(
+                    fields[6..].iter().map(|s| s.parse::<usize>().unwrap()),
+                );
+                cur_zpt = fields[1].parse().unwrap();
+                cur_freq = fields[2].parse().unwrap();
+            } else if state == State::Corr && !line.is_empty() {
+                let fields: Vec<_> = line.split_whitespace().collect();
+                vib_states
+                    .extend(fields.iter().map(|s| s.parse::<usize>().unwrap()));
+            } else if state == State::Corr
+                && line.is_empty()
+                && vib_states.len() > 0
+            {
+                if vib_states.iter().all(|s| *s == 0) {
+                    ret.zpt = cur_zpt;
                 } else {
-                    let idx =
-                        fields[6..].iter().position(|&x| x == "1").unwrap();
+                    let mut one = false;
+                    let mut idx = 0;
+                    for (i, state) in vib_states.iter().enumerate() {
+                        if (*state == 1 && one) || *state == 2 {
+                            continue 'outer;
+                        } else if *state == 1 {
+                            idx = i;
+                            one = true;
+                        }
+                    }
                     if idx > ret.corr.len() {
                         ret.corr.resize(idx + 1, 0.0);
                     }
-                    ret.corr[idx] = fields[2].parse().unwrap();
+                    ret.corr[idx] = cur_freq;
                 }
             }
         }
@@ -88,7 +103,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_c3h2() {
+    fn c3h2() {
         let got = Summary::new("testfiles/spectro.out");
         let want = Summary {
             harm: vec![
@@ -105,6 +120,31 @@ mod tests {
             ],
             zpt: 6993.7720,
         };
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn c2h4() {
+        let got = Summary::new("testfiles/c2h4.out");
+        let want = Summary {
+            harm: vec![
+                3247.609, 3221.841, 3154.890, 3140.072, 1670.825, 1477.408,
+                1368.483, 1248.308, 1050.245, 963.438, 949.377, 825.523,
+            ],
+            fund: vec![
+                3100.190, 3077.237, 3018.494, 3000.770, 1628.282, 1439.513,
+                1341.751, 1226.454, 1024.367, 948.677, 939.365, 823.880,
+            ],
+            corr: vec![
+                3100.1904, 3077.2369, 3015.7671, 2978.2409, 1623.0185,
+                1439.5135, 1341.7506, 1226.4540, 1024.3674, 948.6771, 939.3649,
+                823.8796,
+            ],
+            zpt: 11022.5891,
+        };
+        assert_eq!(got.harm.len(), want.harm.len());
+        assert_eq!(got.fund.len(), want.fund.len());
+        assert_eq!(got.corr.len(), want.corr.len());
         assert_eq!(got, want);
     }
 }
