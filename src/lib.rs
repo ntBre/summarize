@@ -1,5 +1,7 @@
 use std::io::{BufRead, BufReader};
 
+const BAD_FLOAT: f64 = 999999999.9;
+
 #[derive(Default, Debug, PartialEq)]
 pub struct Summary {
     // pub lx: Vec<f64>,
@@ -67,8 +69,8 @@ impl Summary {
                 vib_states.extend(
                     fields[6..].iter().map(|s| s.parse::<usize>().unwrap()),
                 );
-                cur_zpt = fields[1].parse().unwrap();
-                cur_freq = fields[2].parse().unwrap();
+                cur_zpt = fields[1].parse().unwrap_or(BAD_FLOAT);
+                cur_freq = fields[2].parse().unwrap_or(BAD_FLOAT);
             } else if state == State::Corr && line.contains("DEGEN   (Vt)") {
                 let fields: Vec<_> = line.split_whitespace().collect();
                 vib_states.extend(
