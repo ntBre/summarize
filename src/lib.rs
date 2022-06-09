@@ -54,8 +54,8 @@ impl Summary {
                 && line.contains(|s: char| s.is_numeric())
             {
                 let fields: Vec<_> = line.split_whitespace().collect();
-                ret.harm.push(fields[1].parse().unwrap());
-                ret.fund.push(fields[2].parse().unwrap());
+                ret.harm.push(fields[1].parse().unwrap_or(BAD_FLOAT));
+                ret.fund.push(fields[2].parse().unwrap_or(BAD_FLOAT));
             } else if line.contains("STATE NO.") && !line.contains("SPECTRUM") {
                 skip = 2;
                 state = State::Corr;
