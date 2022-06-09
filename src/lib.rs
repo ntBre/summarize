@@ -69,6 +69,16 @@ impl Summary {
                 );
                 cur_zpt = fields[1].parse().unwrap();
                 cur_freq = fields[2].parse().unwrap();
+            } else if state == State::Corr && line.contains("DEGEN   (Vt)") {
+                let fields: Vec<_> = line.split_whitespace().collect();
+                vib_states.extend(
+                    fields[3..].iter().map(|s| s.parse::<usize>().unwrap()),
+                );
+            } else if state == State::Corr && line.contains("DEGEN   (Vl)") {
+                // nothing for now, just eat the line after handling the count
+                // above in the Vt case
+            } else if state == State::Corr && line.contains("<>") {
+                state = State::None;
             } else if state == State::Corr && !line.is_empty() {
                 let fields: Vec<_> = line.split_whitespace().collect();
                 vib_states
@@ -149,5 +159,20 @@ mod tests {
         assert_eq!(got.fund.len(), want.fund.len());
         assert_eq!(got.corr.len(), want.corr.len());
         assert_eq!(got, want);
+    }
+
+    #[test]
+    fn degmode() {
+        let got = Summary::new("testfiles/degmode.out");
+        let want = Summary {
+            harm: vec![2929.500, 2834.256, 2236.673, 939.167, 791.065],
+            fund: vec![2886.379, 2799.917, 2221.068, 936.105, 797.174],
+            corr: vec![2886.3792, 2799.9172, 2221.0683, 936.1049, 797.1743],
+            zpt: 5707.3228,
+        };
+        assert_eq!(got.harm, want.harm);
+        assert_eq!(got.fund, want.fund);
+        assert_eq!(got.corr, want.corr);
+        assert_eq!(got.zpt, want.zpt);
     }
 }
