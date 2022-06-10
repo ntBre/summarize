@@ -1,4 +1,7 @@
-use std::io::{BufRead, BufReader};
+use std::{
+    fmt::Display,
+    io::{BufRead, BufReader},
+};
 
 const BAD_FLOAT: f64 = 999999999.9;
 
@@ -110,6 +113,24 @@ impl Summary {
             }
         }
         ret
+    }
+}
+
+impl Display for Summary {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "ZPT = {:.1}", self.zpt)?;
+        writeln!(f, "{:5}{:8}{:8}{:8}", "Mode", "Harm", "Fund", "Corr",)?;
+        for i in 0..self.harm.len() {
+            writeln!(
+                f,
+                "{:5}{:8.1}{:8.1}{:8.1}",
+                i + 1,
+                self.harm[i],
+                self.fund[i],
+                self.corr[i]
+            )?;
+        }
+        Ok(())
     }
 }
 
