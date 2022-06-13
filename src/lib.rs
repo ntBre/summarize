@@ -120,14 +120,18 @@ impl Display for Summary {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "ZPT = {:.1}", self.zpt)?;
         writeln!(f, "{:5}{:8}{:8}{:8}", "Mode", "Harm", "Fund", "Corr",)?;
+        let width = f.width().unwrap_or(8);
+        let precision = f.precision().unwrap_or(1);
         for i in 0..self.harm.len() {
             writeln!(
                 f,
-                "{:5}{:8.1}{:8.1}{:8.1}",
+                "{:5}{:width$.precision$}{:width$.precision$}{:width$.precision$}",
                 i + 1,
                 self.harm[i],
                 self.fund[i],
-                self.corr[i]
+                self.corr[i],
+		width = width,
+		precision = precision,
             )?;
         }
         Ok(())
