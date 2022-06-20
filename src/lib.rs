@@ -7,10 +7,10 @@ const BAD_FLOAT: f64 = 999999999.9;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Summary {
-    // pub lx: Vec<f64>,
     pub harm: Vec<f64>,
     pub fund: Vec<f64>,
     pub corr: Vec<f64>,
+    pub irreps: Vec<symm::Irrep>,
     // pub rots: Vec<Vec<f64>>,
     // pub deltas: Vec<f64>,
     // pub phis: Vec<f64>,
@@ -22,6 +22,23 @@ pub struct Summary {
     // pub lin: bool,
     // pub imag: bool,
 }
+
+/*
+ethylene
+b2u
+b3g
+ag
+b1u
+ag
+b1u
+ag
+b3g
+au
+b3u
+b2g
+b2u
+ */
+
 
 impl Summary {
     pub fn new(filename: &str) -> Self {
@@ -159,6 +176,7 @@ mod tests {
                 1007.8986, 876.8004, 876.4785, 772.6584,
             ],
             zpt: 6993.7720,
+            irreps: vec![],
         };
         assert_eq!(got, want);
     }
@@ -181,6 +199,7 @@ mod tests {
                 823.8796,
             ],
             zpt: 11022.5891,
+            irreps: vec![],
         };
         assert_eq!(got.harm.len(), want.harm.len());
         assert_eq!(got.fund.len(), want.fund.len());
@@ -196,6 +215,7 @@ mod tests {
             fund: vec![2886.379, 2799.917, 2221.068, 936.105, 797.174],
             corr: vec![2886.3792, 2799.9172, 2221.0683, 936.1049, 797.1743],
             zpt: 5707.3228,
+            irreps: vec![],
         };
         assert_eq!(got.harm, want.harm);
         assert_eq!(got.fund, want.fund);
