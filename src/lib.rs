@@ -240,7 +240,20 @@ impl Summary {
         let mut pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
         pairs.dedup_by(|a, b| a.0 == b.0);
         ret.lxm = pairs.iter().map(|p| p.1.clone()).collect();
+        ret.compute_irreps();
         ret
+    }
+
+    fn compute_irreps(&mut self) {
+        let pg = self.geom.point_group();
+        for disp in &self.lxm {
+            let mol = self.geom.clone() + disp.clone();
+            let irrep = match mol.irrep_approx(&pg, 1e-5) {
+                Ok(p) => p,
+                Err(_) => panic!("failed to compute irrep for\n{}", mol),
+            };
+            self.irreps.push(irrep);
+        }
     }
 }
 

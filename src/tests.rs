@@ -1,5 +1,7 @@
 use super::*;
 
+use symm::Irrep::*;
+
 #[test]
 fn c3h2() {
     let got = Summary::new("testfiles/spectro.out");
@@ -17,7 +19,7 @@ fn c3h2() {
             876.8004, 876.4785, 772.6584,
         ],
         zpt: 6993.7720,
-        irreps: vec![],
+        irreps: vec![A1, B2, A1, A1, B2, A2, B2, A1, B1],
         geom: Molecule::from_str(
             "
 C                  0.0000000     -0.8888444      0.0000000
@@ -80,6 +82,7 @@ H                  1.5951933      0.9069249      0.0000000
     assert_eq!(got.fund.len(), want.fund.len());
     assert_eq!(got.corr.len(), want.corr.len());
     assert_eq!(got.lxm.len(), want.lxm.len());
+    assert_eq!(got.irreps, want.irreps);
     assert_eq!(got, want);
 }
 
@@ -100,7 +103,7 @@ fn c2h4() {
             1341.7506, 1226.4540, 1024.3674, 948.6771, 939.3649, 823.8796,
         ],
         zpt: 11022.5891,
-        irreps: vec![],
+        irreps: vec![B2u, B3g, Ag, B1u, Ag, B1u, Ag, B3g, Au, B3u, B2g, B2u],
         geom: Molecule::from_str(
             "
     C              0.6667933      0.0000000      0.0000000
@@ -191,6 +194,7 @@ fn c2h4() {
     assert_eq!(got.fund.len(), want.fund.len());
     assert_eq!(got.corr.len(), want.corr.len());
     assert_eq!(got.lxm.len(), want.lxm.len());
+    assert_eq!(got.irreps, want.irreps);
     assert_eq!(got, want);
 }
 
@@ -202,7 +206,7 @@ fn degmode() {
         fund: vec![2886.379, 2799.917, 2221.068, 936.105, 797.174],
         corr: vec![2886.3792, 2799.9172, 2221.0683, 936.1049, 797.1743],
         zpt: 5707.3228,
-        irreps: vec![],
+        irreps: vec![Ag, B1u, Ag, B2u, B3g],
         geom: Molecule::from_str(
             "
                  H   0.0000000      0.0000000      1.6353253
@@ -245,5 +249,6 @@ fn degmode() {
     assert_eq!(got.corr, want.corr);
     assert_eq!(got.zpt, want.zpt);
     assert_eq!(got.lxm.len(), want.lxm.len());
+    assert_eq!(got.irreps, want.irreps);
     assert_eq!(got, want);
 }
