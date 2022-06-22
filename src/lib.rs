@@ -65,22 +65,6 @@ pub struct Summary {
     // pub imag: bool,
 }
 
-/*
-ethylene
-b2u
-b3g
-ag
-b1u
-ag
-b1u
-ag
-b3g
-au
-b3u
-b2g
-b2u
- */
-
 impl Summary {
     pub fn new(filename: &str) -> Self {
         let f = match std::fs::File::open(filename) {
