@@ -18,6 +18,9 @@ const BAD_FLOAT: f64 = 999999999.9;
 /// threshold for discarding rotations and translations
 const ROTRANS_THRSH: f64 = 30.0;
 
+/// threshold for computing irrep symmetries
+const SYMM_EPS: f64 = 1e-4;
+
 lazy_static! {
     /// default weights used in SPECTRO
     static ref ATOMIC_WEIGHTS: HashMap<&'static str, usize> = HashMap::from([
@@ -230,11 +233,16 @@ impl Summary {
 
     fn compute_irreps(&mut self) {
         let pg = self.geom.point_group();
-        for disp in &self.lxm {
+        for (i, disp) in self.lxm.iter().enumerate() {
             let mol = self.geom.clone() + disp.clone();
-            let irrep = match mol.irrep_approx(&pg, 1e-5) {
+            let irrep = match mol.irrep_approx(&pg, SYMM_EPS) {
                 Ok(p) => p,
-                Err(_) => panic!("failed to compute irrep for\n{}", mol),
+                Err(_) => {
+                    panic!(
+                        "failed to compute irrep {i} for\n{}\nin {}",
+                        mol, pg
+                    )
+                }
             };
             self.irreps.push(irrep);
         }
