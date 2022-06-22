@@ -1,16 +1,58 @@
 use std::{
+    collections::HashMap,
     fmt::Display,
     io::{BufRead, BufReader},
+    iter::zip,
+    str::FromStr,
 };
 
+use lazy_static::lazy_static;
+use regex::Regex;
+use symm::{Atom, Irrep, Molecule};
+
+#[cfg(test)]
+mod tests;
+
 const BAD_FLOAT: f64 = 999999999.9;
+
+/// threshold for discarding rotations and translations
+const ROTRANS_THRSH: f64 = 30.0;
+
+lazy_static! {
+    /// default weights used in SPECTRO
+    static ref ATOMIC_WEIGHTS: HashMap<&'static str, usize> = HashMap::from([
+        ("1.0078250", 1),
+        ("4.0026032", 2),
+        ("7.0160030", 3),
+        ("9.0121822", 4),
+        ("11.0093054", 5),
+        ("12.0000000", 6),
+        ("14.0030740", 7),
+        ("15.9949146", 8),
+        ("18.9984032", 9),
+        ("19.9924356", 10),
+        ("22.9897677", 11),
+        ("23.9850423", 12),
+        ("26.9815386", 13),
+        ("27.9769271", 14),
+        ("30.9737620", 15),
+        ("31.9720707", 16),
+        ("34.9688527", 17),
+        ("39.9623837", 18),
+    ]);
+    static ref HEADER: Regex = Regex::new(r"^(\s*\d+)+\s*$").unwrap();
+    static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
+}
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Summary {
     pub harm: Vec<f64>,
     pub fund: Vec<f64>,
     pub corr: Vec<f64>,
-    pub irreps: Vec<symm::Irrep>,
+    // these fields are needed to get the symmetries of the modes
+    pub geom: Molecule,
+    pub irreps: Vec<Irrep>,
+    pub lxm: Vec<Vec<f64>>,
     // pub rots: Vec<Vec<f64>>,
     // pub deltas: Vec<f64>,
     // pub phis: Vec<f64>,
@@ -39,7 +81,6 @@ b2g
 b2u
  */
 
-
 impl Summary {
     pub fn new(filename: &str) -> Self {
         let f = match std::fs::File::open(filename) {
@@ -51,8 +92,11 @@ impl Summary {
         enum State {
             Fund,
             Corr,
+            Geom,
+            LXM,
             None,
         }
+
         let mut state = State::None;
         let mut skip = 0;
         let mut ret = Self::default();
@@ -60,9 +104,73 @@ impl Summary {
         let mut vib_states = Vec::new();
         let mut cur_zpt = 0.0;
         let mut cur_freq = 0.0;
+        // keep track of the freqs from the LXM matrix to handle degenerate
+        // modes
+        let mut lxm_freqs = Vec::new();
+        // block of the LXM matrix
+        let mut block = 0;
         'outer: for line in lines {
             if skip > 0 {
                 skip -= 1;
+            } else if line.contains("MOLECULAR PRINCIPAL GEOMETRY") {
+                skip = 2;
+                state = State::Geom;
+            } else if state == State::Geom {
+                let fields: Vec<_> = line.split_whitespace().collect();
+                if fields.len() == 0 {
+                    state = State::None;
+                } else {
+                    let atomic_number = match ATOMIC_WEIGHTS.get(fields[4]) {
+                        Some(a) => *a,
+                        None => panic!(
+                            "atom with weight {} not found, tell Brent!",
+                            fields[4]
+                        ),
+                    };
+                    if let [x, y, z] = fields[1..=3]
+                        .iter()
+                        .map(|s| s.parse::<f64>().unwrap())
+                        .collect::<Vec<_>>()[..]
+                    {
+                        ret.geom.atoms.push(Atom::new(atomic_number, x, y, z));
+                    }
+                }
+            } else if line.contains("LXM MATRIX") {
+                skip = 2;
+                state = State::LXM;
+                // reset these. for degmodes it gets printed twice
+                block = 0;
+                lxm_freqs = Vec::new();
+                ret.lxm = Vec::new();
+            } else if state == State::LXM {
+                let fields: Vec<_> = line.split_whitespace().collect();
+                if fields.len() == 0 {
+                    skip = 1;
+                } else if HEADER.is_match(&line) {
+                    block += 1;
+                    continue;
+                } else if line.contains("--------") {
+                    continue;
+                } else if line.contains("LX MATRIX") {
+                    state = State::None;
+                } else if DISP.is_match(fields[0]) {
+                    for (i, d) in fields[1..].iter().enumerate() {
+                        let idx = 10 * block + i;
+                        if ret.lxm.len() <= idx {
+                            ret.lxm.resize(idx + 1, vec![]);
+                        }
+                        ret.lxm[idx].push(f64::from_str(d).unwrap());
+                    }
+                } else {
+                    lxm_freqs.extend(fields.iter().filter_map(|s| {
+                        let f = s.parse::<f64>().unwrap();
+                        if f > ROTRANS_THRSH {
+                            Some(f)
+                        } else {
+                            None
+                        }
+                    }));
+                }
             } else if line.contains("BAND CENTER ANALYSIS") {
                 skip = 3;
                 state = State::Fund;
@@ -129,6 +237,9 @@ impl Summary {
                 }
             }
         }
+        let mut pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
+        pairs.dedup_by(|a, b| a.0 == b.0);
+        ret.lxm = pairs.iter().map(|p| p.1.clone()).collect();
         ret
     }
 }
@@ -152,74 +263,5 @@ impl Display for Summary {
             )?;
         }
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn c3h2() {
-        let got = Summary::new("testfiles/spectro.out");
-        let want = Summary {
-            harm: vec![
-                3281.362, 3247.646, 1623.590, 1307.445, 1090.564, 992.798,
-                908.650, 901.695, 785.141,
-            ],
-            fund: vec![
-                3152.935, 3108.684, 1593.567, 1275.793, 1056.887, 1007.899,
-                876.800, 876.478, 772.658,
-            ],
-            corr: vec![
-                3139.8162, 3108.6836, 1595.1229, 1275.7931, 1056.8867,
-                1007.8986, 876.8004, 876.4785, 772.6584,
-            ],
-            zpt: 6993.7720,
-            irreps: vec![],
-        };
-        assert_eq!(got, want);
-    }
-
-    #[test]
-    fn c2h4() {
-        let got = Summary::new("testfiles/c2h4.out");
-        let want = Summary {
-            harm: vec![
-                3247.609, 3221.841, 3154.890, 3140.072, 1670.825, 1477.408,
-                1368.483, 1248.308, 1050.245, 963.438, 949.377, 825.523,
-            ],
-            fund: vec![
-                3100.190, 3077.237, 3018.494, 3000.770, 1628.282, 1439.513,
-                1341.751, 1226.454, 1024.367, 948.677, 939.365, 823.880,
-            ],
-            corr: vec![
-                3100.1904, 3077.2369, 3015.7671, 2978.2409, 1623.0185,
-                1439.5135, 1341.7506, 1226.4540, 1024.3674, 948.6771, 939.3649,
-                823.8796,
-            ],
-            zpt: 11022.5891,
-            irreps: vec![],
-        };
-        assert_eq!(got.harm.len(), want.harm.len());
-        assert_eq!(got.fund.len(), want.fund.len());
-        assert_eq!(got.corr.len(), want.corr.len());
-        assert_eq!(got, want);
-    }
-
-    #[test]
-    fn degmode() {
-        let got = Summary::new("testfiles/degmode.out");
-        let want = Summary {
-            harm: vec![2929.500, 2834.256, 2236.673, 939.167, 791.065],
-            fund: vec![2886.379, 2799.917, 2221.068, 936.105, 797.174],
-            corr: vec![2886.3792, 2799.9172, 2221.0683, 936.1049, 797.1743],
-            zpt: 5707.3228,
-            irreps: vec![],
-        };
-        assert_eq!(got.harm, want.harm);
-        assert_eq!(got.fund, want.fund);
-        assert_eq!(got.corr, want.corr);
-        assert_eq!(got.zpt, want.zpt);
     }
 }
