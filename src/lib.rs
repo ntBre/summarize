@@ -232,7 +232,7 @@ impl Summary {
     }
 
     fn compute_irreps(&mut self) {
-        let pg = self.geom.point_group();
+        let pg = self.geom.point_group_approx(SYMM_EPS);
         for (i, disp) in self.lxm.iter().enumerate() {
             let mol = self.geom.clone() + disp.clone();
             let irrep = match mol.irrep_approx(&pg, SYMM_EPS) {
@@ -252,8 +252,16 @@ impl Summary {
 impl Display for Summary {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "ZPT = {:.1}", self.zpt)?;
-        writeln!(f, "{:5}{:8}{:8}{:8}", "Mode", "Harm", "Fund", "Corr",)?;
         let width = f.width().unwrap_or(8);
+        writeln!(
+            f,
+            "{:5}{:width$}{:width$}{:width$}",
+            "Mode",
+            "Harm",
+            "Fund",
+            "Corr",
+            width = width
+        )?;
         let precision = f.precision().unwrap_or(1);
         for i in 0..self.harm.len() {
             writeln!(
