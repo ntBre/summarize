@@ -1,3 +1,9 @@
+use summarize::Summary;
+
 fn main() {
-    println!("Hello, world!");
+    let infile = std::env::args()
+        .skip(1)
+        .next()
+        .expect("usage: summarize FILENAME");
+    println!("{}", Summary::new(&infile));
 }

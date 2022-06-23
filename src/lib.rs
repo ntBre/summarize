@@ -255,24 +255,26 @@ impl Display for Summary {
         let width = f.width().unwrap_or(8);
         writeln!(
             f,
-            "{:5}{:width$}{:width$}{:width$}",
+            "{:>5}{:>5}{:>width$}{:>width$}{:>width$}",
             "Mode",
+            "Symm",
             "Harm",
             "Fund",
             "Corr",
             width = width
         )?;
-        let precision = f.precision().unwrap_or(1);
+        let prec = f.precision().unwrap_or(1);
         for i in 0..self.harm.len() {
             writeln!(
                 f,
-                "{:5}{:width$.precision$}{:width$.precision$}{:width$.precision$}",
+                "{:5}{:>5}{:width$.prec$}{:width$.prec$}{:width$.prec$}",
                 i + 1,
+                self.irreps[i],
                 self.harm[i],
                 self.fund[i],
                 self.corr[i],
-		width = width,
-		precision = precision,
+                width = width,
+                prec = prec,
             )?;
         }
         Ok(())
