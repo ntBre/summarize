@@ -252,16 +252,20 @@ impl Summary {
         let pg = self.geom.point_group_approx(SYMM_EPS);
         for (i, disp) in self.lxm.iter().enumerate() {
             let mol = self.geom.clone() + disp.clone();
-            let irrep = match mol.irrep_approx(&pg, SYMM_EPS) {
-                Ok(p) => p,
-                Err(_) => {
+	    let mut eps = SYMM_EPS;
+            let mut irrep = mol.irrep_approx(&pg, eps);
+	    while let Err(_) = irrep {
+		if eps >= 0.1 {
                     panic!(
                         "failed to compute irrep {i} for\n{}\nin {}",
                         mol, pg
                     )
-                }
-            };
-            self.irreps.push(irrep);
+		}
+		eps *= 10.0;
+		eprintln!("warning: raising epsilon to {:.1e}", eps);
+		irrep = mol.irrep_approx(&pg, eps);
+	    }
+            self.irreps.push(irrep.unwrap());
         }
     }
 }
