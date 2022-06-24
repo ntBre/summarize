@@ -56,7 +56,7 @@ pub struct Summary {
     pub geom: Molecule,
     pub irreps: Vec<Irrep>,
     pub lxm: Vec<Vec<f64>>,
-    // pub rots: Vec<Vec<f64>>,
+    pub rots: Vec<Vec<f64>>,
     // pub deltas: Vec<f64>,
     // pub phis: Vec<f64>,
     // pub rhead: Vec<String>,
@@ -68,6 +68,16 @@ pub struct Summary {
     // pub imag: bool,
 }
 
+#[derive(PartialEq)]
+enum State {
+    Fund,
+    Corr,
+    Geom,
+    LXM,
+    Rots,
+    None,
+}
+
 impl Summary {
     pub fn new(filename: &str) -> Self {
         let f = match std::fs::File::open(filename) {
@@ -75,14 +85,6 @@ impl Summary {
             Err(e) => panic!("failed to open {} with '{}'", filename, e),
         };
         let lines = BufReader::new(f).lines().flatten();
-        #[derive(PartialEq)]
-        enum State {
-            Fund,
-            Corr,
-            Geom,
-            LXM,
-            None,
-        }
 
         let mut state = State::None;
         let mut skip = 0;
@@ -96,6 +98,9 @@ impl Summary {
         let mut lxm_freqs = Vec::new();
         // block of the LXM matrix
         let mut block = 0;
+        // rotational constant variables
+        let mut rot_good = false;
+        let mut rot_states = Vec::new();
         'outer: for line in lines {
             if skip > 0 {
                 skip -= 1;
@@ -103,25 +108,7 @@ impl Summary {
                 skip = 2;
                 state = State::Geom;
             } else if state == State::Geom {
-                let fields: Vec<_> = line.split_whitespace().collect();
-                if fields.len() == 0 {
-                    state = State::None;
-                } else {
-                    let atomic_number = match ATOMIC_WEIGHTS.get(fields[4]) {
-                        Some(a) => *a,
-                        None => panic!(
-                            "atom with weight {} not found, tell Brent!",
-                            fields[4]
-                        ),
-                    };
-                    if let [x, y, z] = fields[1..=3]
-                        .iter()
-                        .map(|s| s.parse::<f64>().unwrap())
-                        .collect::<Vec<_>>()[..]
-                    {
-                        ret.geom.atoms.push(Atom::new(atomic_number, x, y, z));
-                    }
-                }
+                geom_handler(&line, &mut state, &mut ret);
             } else if line.contains("LXM MATRIX") {
                 skip = 2;
                 state = State::LXM;
@@ -179,7 +166,7 @@ impl Summary {
             {
                 state = State::None;
             } else if state == State::Corr && line.contains("NON-DEG (Vs)") {
-                vib_states = Vec::new();
+                vib_states.clear();
                 let fields: Vec<_> = line.split_whitespace().collect();
                 vib_states.extend(
                     fields[6..].iter().map(|s| s.parse::<usize>().unwrap()),
@@ -187,9 +174,10 @@ impl Summary {
                 cur_zpt = fields[1].parse().unwrap_or(BAD_FLOAT);
                 cur_freq = fields[2].parse().unwrap_or(BAD_FLOAT);
             } else if state == State::Corr && line.contains("DEGEN   (Vt)") {
-                let fields: Vec<_> = line.split_whitespace().collect();
                 vib_states.extend(
-                    fields[3..].iter().map(|s| s.parse::<usize>().unwrap()),
+                    line.split_whitespace()
+                        .skip(3)
+                        .map(|s| s.parse::<usize>().unwrap()),
                 );
             } else if state == State::Corr && line.contains("DEGEN   (Vl)") {
                 // nothing for now, just eat the line after handling the count
@@ -197,9 +185,10 @@ impl Summary {
             } else if state == State::Corr && line.contains("<>") {
                 state = State::None;
             } else if state == State::Corr && !line.is_empty() {
-                let fields: Vec<_> = line.split_whitespace().collect();
-                vib_states
-                    .extend(fields.iter().map(|s| s.parse::<usize>().unwrap()));
+                vib_states.extend(
+                    line.split_whitespace()
+                        .map(|s| s.parse::<usize>().unwrap()),
+                );
             } else if state == State::Corr
                 && line.is_empty()
                 && vib_states.len() > 0
@@ -222,6 +211,34 @@ impl Summary {
                     }
                     ret.corr[idx] = cur_freq;
                 }
+            } else if line.contains("NON-DEG(Vt)") {
+                rot_states.extend(
+                    line.split_whitespace().skip(2).map(|s| s.to_string()),
+                );
+            } else if line.contains("ROTATIONAL ENERGY LEVEL ANALYSIS") {
+                state = State::Rots;
+                rot_good = true;
+            } else if rot_good && line.contains("BZA") {
+                state = State::Rots;
+            } else if state == State::Rots && rot_good {
+                let mut one = false;
+                for state in &rot_states {
+                    if (*state == "1" && one) || *state == "2" {
+                        continue 'outer;
+                    } else if *state == "1" {
+                        one = true;
+                    }
+                }
+                rot_states.clear();
+                state = State::None;
+                let fields: Vec<_> = line.split_whitespace().collect();
+                if fields.len() != 3 {
+                    // this says "sad hack" next to it in the Go version, not
+                    // sure why yet
+                    continue;
+                }
+                ret.rots
+                    .push(fields.iter().map(|s| s.parse().unwrap()).collect());
             }
         }
         let mut pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
@@ -245,6 +262,27 @@ impl Summary {
                 }
             };
             self.irreps.push(irrep);
+        }
+    }
+}
+
+fn geom_handler(line: &String, state: &mut State, ret: &mut Summary) {
+    let fields: Vec<_> = line.split_whitespace().collect();
+    if fields.len() == 0 {
+        *state = State::None;
+    } else {
+        let atomic_number = match ATOMIC_WEIGHTS.get(fields[4]) {
+            Some(a) => *a,
+            None => {
+                panic!("atom with weight {} not found, tell Brent!", fields[4])
+            }
+        };
+        if let [x, y, z] = fields[1..=3]
+            .iter()
+            .map(|s| s.parse::<f64>().unwrap())
+            .collect::<Vec<_>>()[..]
+        {
+            ret.geom.atoms.push(Atom::new(atomic_number, x, y, z));
         }
     }
 }

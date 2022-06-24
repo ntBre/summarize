@@ -77,12 +77,26 @@ H                  1.5951933      0.9069249      0.0000000
                 0.0000000, 0.6448997, 0.0000000, 0.0000000, 0.6448997,
             ],
         ],
+        rots: vec![
+            vec![1.0699983, 0.5558117, 1.1639391],
+            vec![1.0655950, 0.5541780, 1.1620074],
+            vec![1.0658789, 0.5542868, 1.1620312],
+            vec![1.0638367, 0.5543723, 1.1642112],
+            vec![1.0703606, 0.5561731, 1.1608226],
+            vec![1.0712611, 0.5513020, 1.1594914],
+            vec![1.0662658, 0.5563234, 1.1647092],
+            vec![1.0729460, 0.5538695, 1.1622924],
+            vec![1.0723935, 0.5553067, 1.1657756],
+            vec![1.0697371, 0.5566012, 1.1595315],
+        ],
     };
     assert_eq!(got.harm.len(), want.harm.len());
     assert_eq!(got.fund.len(), want.fund.len());
     assert_eq!(got.corr.len(), want.corr.len());
     assert_eq!(got.lxm.len(), want.lxm.len());
     assert_eq!(got.irreps, want.irreps);
+    assert_eq!(got.rots.len(), want.rots.len());
+    assert_eq!(got.rots, want.rots);
     assert_eq!(got, want);
 }
 
@@ -189,12 +203,29 @@ fn c2h4() {
                 -0.4332807, -0.2308957, 0.0000000,
             ],
         ],
+        rots: vec![
+            vec![0.9970438, 0.8248191, 4.8497526],
+            vec![0.9947709, 0.8228383, 4.8246085],
+            vec![0.9949339, 0.8231722, 4.8233596],
+            vec![0.9955674, 0.8226294, 4.8077994],
+            vec![0.9958420, 0.8228567, 4.8148440],
+            vec![0.9942198, 0.8200136, 4.8631492],
+            vec![1.0034126, 0.8232445, 4.9141218],
+            vec![0.9978865, 0.8227350, 4.8613105],
+            vec![0.9985819, 0.8226920, 4.9864849],
+            vec![1.0089357, 0.8248270, 4.7600134],
+            vec![0.9915086, 0.8261680, 4.8147661],
+            vec![0.9914912, 0.8255070, 4.7225486],
+            vec![0.9821289, 0.8232440, 4.8995346],
+        ],
     };
     assert_eq!(got.harm.len(), want.harm.len());
     assert_eq!(got.fund.len(), want.fund.len());
     assert_eq!(got.corr.len(), want.corr.len());
     assert_eq!(got.lxm.len(), want.lxm.len());
     assert_eq!(got.irreps, want.irreps);
+    assert_eq!(got.rots.len(), want.rots.len());
+    assert_eq!(got.rots, want.rots);
     assert_eq!(got, want);
 }
 
@@ -243,6 +274,7 @@ fn degmode() {
                 0.0000000, 0.0000000,
             ],
         ],
+        rots: vec![],
     };
     assert_eq!(got.harm, want.harm);
     assert_eq!(got.fund, want.fund);
