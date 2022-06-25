@@ -133,11 +133,12 @@ impl Summary {
                         if ret.lxm.len() <= idx {
                             ret.lxm.resize(idx + 1, vec![]);
                         }
-                        ret.lxm[idx].push(f64::from_str(d).unwrap());
+                        ret.lxm[idx]
+                            .push(f64::from_str(d).unwrap_or(BAD_FLOAT));
                     }
                 } else {
                     lxm_freqs.extend(fields.iter().filter_map(|s| {
-                        let f = s.parse::<f64>().unwrap();
+                        let f = s.parse::<f64>().unwrap_or(BAD_FLOAT);
                         if f > ROTRANS_THRSH {
                             Some(f)
                         } else {
@@ -237,8 +238,12 @@ impl Summary {
                     // sure why yet
                     continue;
                 }
-                ret.rots
-                    .push(fields.iter().map(|s| s.parse().unwrap()).collect());
+                ret.rots.push(
+                    fields
+                        .iter()
+                        .map(|s| s.parse().unwrap_or(BAD_FLOAT))
+                        .collect(),
+                );
             }
         }
         let mut pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
@@ -252,19 +257,19 @@ impl Summary {
         let pg = self.geom.point_group_approx(SYMM_EPS);
         for (i, disp) in self.lxm.iter().enumerate() {
             let mol = self.geom.clone() + disp.clone();
-	    let mut eps = SYMM_EPS;
+            let mut eps = SYMM_EPS;
             let mut irrep = mol.irrep_approx(&pg, eps);
-	    while let Err(_) = irrep {
-		if eps >= 0.1 {
+            while let Err(_) = irrep {
+                if eps >= 0.1 {
                     panic!(
                         "failed to compute irrep {i} for\n{}\nin {}",
                         mol, pg
                     )
-		}
-		eps *= 10.0;
-		eprintln!("warning: raising epsilon to {:.1e}", eps);
-		irrep = mol.irrep_approx(&pg, eps);
-	    }
+                }
+                eps *= 10.0;
+                eprintln!("warning: raising epsilon to {:.1e}", eps);
+                irrep = mol.irrep_approx(&pg, eps);
+            }
             self.irreps.push(irrep.unwrap());
         }
     }
