@@ -249,17 +249,6 @@ impl Summary {
         let mut pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
         pairs.dedup_by(|a, b| a.0 == b.0);
         ret.lxm = pairs.iter().map(|p| p.1.clone()).collect();
-        if ret.fund.iter().any(|f| *f == BAD_FLOAT) {
-	    // irreps are basically meaningless if any of the frequencies were
-	    // unreadable and they can cause a crash. The specific issue when I
-	    // added this was that the LXM matrix included large "negative"
-	    // frequencies, which pushed rotations or translations into the
-	    // portion of the matrix where I expected only vibrations to be.
-	    // This resulted from some bad parameters in `semp` of course, so it
-	    // shouldn't affect normal operation
-	    ret.irreps = vec![symm::Irrep::A; ret.fund.len()];
-            return ret;
-        }
         ret.compute_irreps();
         ret
     }
@@ -272,10 +261,13 @@ impl Summary {
             let mut irrep = mol.irrep_approx(&pg, eps);
             while let Err(_) = irrep {
                 if eps >= 0.1 {
-                    panic!(
+                    eprintln!(
                         "failed to compute irrep {i} for\n{}\nin {}",
                         mol, pg
-                    )
+                    );
+		    // give up and give A
+                    irrep = Ok(symm::Irrep::A);
+                    break;
                 }
                 eps *= 10.0;
                 eprintln!("warning: raising epsilon to {:.1e}", eps);
