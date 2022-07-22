@@ -259,13 +259,13 @@ impl Summary {
             let mol = self.geom.clone() + disp.clone();
             let mut eps = SYMM_EPS;
             let mut irrep = mol.irrep_approx(&pg, eps);
-            while let Err(_) = irrep {
+            while let Err(e) = irrep {
                 if eps >= 0.1 {
                     eprintln!(
-                        "failed to compute irrep {i} for\n{}\nin {}",
+                        "failed to compute irrep {i} for\n{}\nin {} with {e:?}",
                         mol, pg
                     );
-		    // give up and give A
+                    // give up and give A
                     irrep = Ok(symm::Irrep::A);
                     break;
                 }
