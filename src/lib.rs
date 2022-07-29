@@ -246,8 +246,7 @@ impl Summary {
                 );
             }
         }
-        let mut pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
-        pairs.dedup_by(|a, b| a.0 == b.0);
+        let pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
         ret.lxm = pairs.iter().map(|p| p.1.clone()).collect();
         ret.compute_irreps();
         ret
