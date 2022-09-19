@@ -9,4 +9,4 @@ edition = "2021"
 lazy_static = "1.4.0"
 nalgebra = "0.31.1"
 regex = "1.5.5"
-symm = { git = "https://github.com/ntBre/symm", rev = "a5c1a21" }
+symm = { git = "https://github.com/ntBre/symm", rev = "a636e24" }
