@@ -304,6 +304,9 @@ fn geom_handler(line: &str, state: &mut State, ret: &mut Summary) {
 
 impl Display for Summary {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "\nCartesian Geometry (Å): {:.8}", self.geom)?;
+
+        writeln!(f, "Vibrational Frequencies (cm⁻¹):")?;
         writeln!(f, "ZPT = {:.1}", self.zpt)?;
         let width = f.width().unwrap_or(8);
         writeln!(
@@ -329,6 +332,16 @@ impl Display for Summary {
                 width = width,
                 prec = prec,
             )?;
+        }
+
+        writeln!(f, "\nRotational Constants (cm⁻¹):")?;
+        writeln!(f, "{:5}{:^15}{:^15}{:^15}", "State", "A", "B", "C")?;
+        for (i, rot) in self.rots.iter().enumerate() {
+            let mut v = rot.clone();
+            // sort in descending order
+            v.sort_by(|a, b| b.partial_cmp(a).unwrap());
+            let (a, b, c) = (v[0], v[1], v[2]);
+            writeln!(f, "{:5}{:15.7}{:15.7}{:15.7}", i, a, b, c)?;
         }
         Ok(())
     }
