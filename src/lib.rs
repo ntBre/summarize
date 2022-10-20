@@ -271,12 +271,12 @@ impl Summary {
                     // sure why yet
                     continue;
                 }
-                ret.rots.push(
-                    fields
-                        .iter()
-                        .map(|s| s.parse().unwrap_or(BAD_FLOAT))
-                        .collect(),
-                );
+                let mut v: Vec<_> = fields
+                    .iter()
+                    .map(|s| s.parse().unwrap_or(BAD_FLOAT))
+                    .collect();
+                v.sort_by(|a, b| b.partial_cmp(a).unwrap());
+                ret.rots.push(v);
             } else if line.contains("Be") {
                 // line like  ' (Be =    1.64769 IN CM-1)'
                 ret.rot_equil.push(
