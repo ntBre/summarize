@@ -7,6 +7,7 @@ use std::{
     str::FromStr,
 };
 
+use delta::Delta;
 use lazy_static::lazy_static;
 use regex::Regex;
 use symm::{Atom, Irrep, Molecule};
@@ -46,25 +47,42 @@ lazy_static! {
     ]);
     static ref HEADER: Regex = Regex::new(r"^(\s*\d+)+\s*$").unwrap();
     static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
+    static ref DELTA: Regex = Regex::new(r"(?i)^  delta [jk]+ ").unwrap();
 }
+
+mod delta;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Summary {
+    /// harmonic vibrational frequencies
     pub harm: Vec<f64>,
+
+    /// partially resonance-corrected anharmonic vibrational frequencies
     pub fund: Vec<f64>,
+
+    /// fully resonance-corrected anharmonic vibrational frequencies
     pub corr: Vec<f64>,
-    // these fields are needed to get the symmetries of the modes
+
+    /// molecular geometry used in the other calculations
     pub geom: Molecule,
+
+    /// symmetries of the vibrational modes, probably not the best name
     pub irreps: Vec<Irrep>,
+
+    /// normal coordinate matrix corresponding to the harmonic vibrational
+    /// frequencies in `harm`
     pub lxm: Vec<Vec<f64>>,
 
     /// vibrationally-averaged (₀) and singly-vibrationally-excited rotational
     /// constants
     pub rots: Vec<Vec<f64>>,
 
+    /// equilibrium (ₑ) rotational constants
     pub rot_equil: Vec<f64>,
 
-    // pub deltas: Vec<f64>,
+    /// quartic distortion coefficients
+    pub deltas: Vec<Delta>,
+
     // pub phis: Vec<f64>,
     // pub rhead: Vec<String>,
     // pub ralpha: Vec<f64>,
@@ -263,6 +281,12 @@ impl Summary {
                         .parse()
                         .unwrap(),
                 );
+            } else if DELTA.is_match(&line) {
+                let sp: Vec<&str> = line.split_ascii_whitespace().collect();
+                ret.deltas.push(Delta::new(
+                    &format!("{}{}", sp[0], sp[1]),
+                    sp[4].parse().unwrap(),
+                ));
             }
         }
         let pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
@@ -362,6 +386,11 @@ impl Display for Summary {
             v.sort_by(|a, b| b.partial_cmp(a).unwrap());
             let (a, b, c) = (v[0], v[1], v[2]);
             writeln!(f, "{:5}{:15.7}{:15.7}{:15.7}", i, a, b, c)?;
+        }
+
+        writeln!(f, "\nQuartic Distortion Constants (MHz):")?;
+        for Delta { typ, val } in &self.deltas {
+            writeln!(f, "{typ:>8}{val:14.8}")?;
         }
         Ok(())
     }
