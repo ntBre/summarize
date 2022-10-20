@@ -57,7 +57,13 @@ pub struct Summary {
     pub geom: Molecule,
     pub irreps: Vec<Irrep>,
     pub lxm: Vec<Vec<f64>>,
+
+    /// vibrationally-averaged (₀) and singly-vibrationally-excited rotational
+    /// constants
     pub rots: Vec<Vec<f64>>,
+
+    pub rot_equil: Vec<f64>,
+
     // pub deltas: Vec<f64>,
     // pub phis: Vec<f64>,
     // pub rhead: Vec<String>,
@@ -248,6 +254,15 @@ impl Summary {
                         .map(|s| s.parse().unwrap_or(BAD_FLOAT))
                         .collect(),
                 );
+            } else if line.contains("Be") {
+                // line like  ' (Be =    1.64769 IN CM-1)'
+                ret.rot_equil.push(
+                    line.split_ascii_whitespace()
+                        .nth(2)
+                        .unwrap()
+                        .parse()
+                        .unwrap(),
+                );
             }
         }
         let pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
@@ -336,6 +351,11 @@ impl Display for Summary {
 
         writeln!(f, "\nRotational Constants (cm⁻¹):")?;
         writeln!(f, "{:5}{:^15}{:^15}{:^15}", "State", "A", "B", "C")?;
+        writeln!(
+            f,
+            "{:>5}{:15.7}{:15.7}{:15.7}",
+            "e", self.rot_equil[0], self.rot_equil[1], self.rot_equil[2]
+        )?;
         for (i, rot) in self.rots.iter().enumerate() {
             let mut v = rot.clone();
             // sort in descending order
