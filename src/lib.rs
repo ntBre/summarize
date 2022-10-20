@@ -9,11 +9,15 @@ use std::{
 
 use delta::Delta;
 use lazy_static::lazy_static;
+use phi::Phi;
 use regex::Regex;
 use symm::{Atom, Irrep, Molecule};
 
 #[cfg(test)]
 mod tests;
+
+mod delta;
+mod phi;
 
 const BAD_FLOAT: f64 = 999999999.9;
 
@@ -48,9 +52,8 @@ lazy_static! {
     static ref HEADER: Regex = Regex::new(r"^(\s*\d+)+\s*$").unwrap();
     static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
     static ref DELTA: Regex = Regex::new(r"(?i)^  delta [jk]+ ").unwrap();
+    static ref PHI: Regex = Regex::new(r"(?i)^  phi [jk]+ ").unwrap();
 }
-
-mod delta;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Summary {
@@ -83,7 +86,9 @@ pub struct Summary {
     /// quartic distortion coefficients
     pub deltas: Vec<Delta>,
 
-    // pub phis: Vec<f64>,
+    /// sextic distortion coefficients
+    pub phis: Vec<Phi>,
+
     // pub rhead: Vec<String>,
     // pub ralpha: Vec<f64>,
     // pub requil: Vec<f64>,
@@ -287,6 +292,12 @@ impl Summary {
                     &format!("{}{}", sp[0], sp[1]),
                     sp[4].parse().unwrap(),
                 ));
+            } else if PHI.is_match(&line) {
+                let sp: Vec<&str> = line.split_ascii_whitespace().collect();
+                ret.phis.push(Phi::new(
+                    &format!("{}{}", sp[0], sp[1]),
+                    sp[4].replace('D', "E").parse().unwrap(),
+                ));
             }
         }
         let pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
@@ -392,6 +403,12 @@ impl Display for Summary {
         for Delta { typ, val } in &self.deltas {
             writeln!(f, "{typ:>8}{val:14.8}")?;
         }
+
+        writeln!(f, "\nSextic Distortion Constants (MHz):")?;
+        for Phi { typ, val } in &self.phis {
+            writeln!(f, "{typ:>8}{val:14.8}")?;
+        }
+
         Ok(())
     }
 }
