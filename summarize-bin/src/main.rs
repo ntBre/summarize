@@ -1,7 +1,11 @@
 use summarize::Summary;
 
 fn main() {
-    let infile = std::env::args().nth(1)
-        .expect("usage: summarize FILENAME");
-    println!("{}", Summary::new(&infile));
+    let infiles: Vec<_> = std::env::args().skip(1).collect();
+    if infiles.is_empty() {
+        panic!("usage: summarize FILENAME...");
+    }
+    for infile in infiles {
+        println!("{}", Summary::new(&infile));
+    }
 }
