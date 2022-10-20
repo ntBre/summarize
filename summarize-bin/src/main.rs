@@ -52,33 +52,51 @@ impl Text {
         let max_harms = self.max_harms();
         let max_corrs = self.max_corrs();
         let nsum = self.len();
-        // 3 for w/v label and 8 for each element in self
-        let dashes = vec!["-"; 3 + 8 * nsum];
+        // 4 for w/v label, 6 for each symmetry label, and 8 for each frequency
+        let dashes = vec!["-"; 4 + 14 * nsum];
         let dashes = dashes.join("");
+
+        write!(f, "Mode")?;
+        for _ in 0..nsum {
+            write!(f, "{:>6}{:>8}", "Symm", "Freq.")?;
+        }
+        writeln!(f, "\n{dashes}")?;
+
         for i in 0..max_harms {
-            write!(f, "w{:<2}", i + 1)?;
+            write!(f, " w{:<2}", i + 1)?;
             for sum in &self.0 {
                 if let Some(v) = sum.harm.get(i) {
-                    write!(f, "{:8.1}", v)?;
+                    write!(
+                        f,
+                        "{:>6}{:8.1}",
+                        sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
+                        v
+                    )?;
                 } else {
-                    write!(f, "{:8}", " ")?;
+                    write!(f, "{:14}", " ")?;
                 }
             }
             writeln!(f)?;
         }
         writeln!(f, "{}", dashes)?;
-        write!(f, "ZPT")?;
+        write!(f, "ZPT ")?;
         for sum in &self.0 {
-            write!(f, "{:8.1}", sum.zpt)?;
+            write!(f, "{:14.1}", sum.zpt)?;
         }
         writeln!(f)?;
+
         for i in 0..max_corrs {
-            write!(f, "v{:<2}", i + 1)?;
+            write!(f, " v{:<2}", i + 1)?;
             for sum in &self.0 {
                 if let Some(v) = sum.corr.get(i) {
-                    write!(f, "{:8.1}", v)?;
+                    write!(
+                        f,
+                        "{:>6}{:8.1}",
+                        sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
+                        v
+                    )?;
                 } else {
-                    write!(f, "{:8}", " ")?;
+                    write!(f, "{:14}", " ")?;
                 }
             }
             writeln!(f)?;
@@ -90,7 +108,7 @@ impl Text {
         &self,
         f: &mut std::fmt::Formatter,
     ) -> Result<(), std::fmt::Error> {
-	// equilibrium
+        // equilibrium
         for j in 0..3 {
             write!(f, "{}e ", ["A", "B", "C"][j])?;
             for sum in &self.0 {

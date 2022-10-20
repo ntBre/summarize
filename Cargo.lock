@@ -223,6 +223,7 @@ name = "summarize-bin"
 version = "0.1.0"
 dependencies = [
  "summarize",
+ "symm",
 ]
 
 [[package]]
