@@ -219,6 +219,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "summarize-bin"
+version = "0.1.0"
+dependencies = [
+ "summarize",
+]
+
+[[package]]
 name = "symm"
 version = "0.1.0"
 dependencies = [

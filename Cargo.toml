@@ -10,3 +10,8 @@ lazy_static = "1.4.0"
 nalgebra = "0.31.1"
 regex = "1.5.5"
 symm = { path = "/home/brent/Projects/symm" }
+
+[workspace]
+members = [
+"summarize-bin",
+]

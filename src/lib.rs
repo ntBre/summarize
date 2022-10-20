@@ -3,6 +3,7 @@ use std::{
     fmt::Display,
     io::{BufRead, BufReader},
     iter::zip,
+    path::Path,
     str::FromStr,
 };
 
@@ -73,14 +74,17 @@ enum State {
     Fund,
     Corr,
     Geom,
-    LXM,
+    Lxm,
     Rots,
     None,
 }
 
 impl Summary {
-    pub fn new(filename: &str) -> Self {
-        let f = match std::fs::File::open(filename) {
+    pub fn new<P>(filename: P) -> Self
+    where
+        P: AsRef<Path> + std::fmt::Display,
+    {
+        let f = match std::fs::File::open(&filename) {
             Ok(f) => f,
             Err(e) => panic!("failed to open {} with '{}'", filename, e),
         };
@@ -111,14 +115,14 @@ impl Summary {
                 geom_handler(&line, &mut state, &mut ret);
             } else if line.contains("LXM MATRIX") {
                 skip = 2;
-                state = State::LXM;
+                state = State::Lxm;
                 // reset these. for degmodes it gets printed twice
                 block = 0;
                 lxm_freqs = Vec::new();
                 ret.lxm = Vec::new();
-            } else if state == State::LXM {
+            } else if state == State::Lxm {
                 let fields: Vec<_> = line.split_whitespace().collect();
-                if fields.len() == 0 {
+                if fields.is_empty() {
                     skip = 1;
                 } else if HEADER.is_match(&line) {
                     block += 1;
@@ -192,7 +196,7 @@ impl Summary {
                 );
             } else if state == State::Corr
                 && line.is_empty()
-                && vib_states.len() > 0
+                && !vib_states.is_empty()
             {
                 if vib_states.iter().all(|s| *s == 0) {
                     ret.zpt = cur_zpt;
@@ -277,9 +281,9 @@ impl Summary {
     }
 }
 
-fn geom_handler(line: &String, state: &mut State, ret: &mut Summary) {
+fn geom_handler(line: &str, state: &mut State, ret: &mut Summary) {
     let fields: Vec<_> = line.split_whitespace().collect();
-    if fields.len() == 0 {
+    if fields.is_empty() {
         *state = State::None;
     } else {
         let atomic_number = match ATOMIC_WEIGHTS.get(fields[4]) {
