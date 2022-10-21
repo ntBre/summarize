@@ -2,11 +2,19 @@ use std::fmt::Display;
 
 #[derive(Debug, Default, PartialEq)]
 pub struct Delta {
+    /// these constants are in the A-reduced Watson Hamiltonian
     pub big_delta_j: Option<f64>,
     pub big_delta_k: Option<f64>,
     pub big_delta_jk: Option<f64>,
     pub delta_j: Option<f64>,
     pub delta_k: Option<f64>,
+
+    /// these constants are in the S-reduced Watson Hamiltonian
+    pub big_d_j: Option<f64>,
+    pub big_d_jk: Option<f64>,
+    pub big_d_k: Option<f64>,
+    pub d1: Option<f64>,
+    pub d2: Option<f64>,
 }
 
 impl Display for Delta {

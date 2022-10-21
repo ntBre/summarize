@@ -72,7 +72,7 @@ lazy_static! {
     ]);
     static ref HEADER: Regex = Regex::new(r"^(\s*\d+)+\s*$").unwrap();
     static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
-    static ref DELTA: Regex = Regex::new(r"(?i)^  delta [jk]+ ").unwrap();
+    static ref DELTA: Regex = Regex::new(r"(?i)^  d(elta)? [jk12]+ ").unwrap();
     static ref PHI: Regex = Regex::new(r"(?i)^  phi [jk]+ ").unwrap();
     static ref FERMI: Regex = Regex::new(r"(?i)^ INPUTED FERMI").unwrap();
     static ref CORIOL: Regex = Regex::new(r"(?i)^ INPUTED CORIOLIS").unwrap();
@@ -355,11 +355,18 @@ impl Summary {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
                 let v: f64 = sp[4].parse().unwrap();
                 match (sp[0], sp[1]) {
+                    // S reduction
                     ("DELTA", "J") => ret.deltas.big_delta_j = Some(v),
                     ("DELTA", "K") => ret.deltas.big_delta_k = Some(v),
                     ("DELTA", "JK") => ret.deltas.big_delta_jk = Some(v),
                     ("delta", "J") => ret.deltas.delta_j = Some(v),
                     ("delta", "K") => ret.deltas.delta_k = Some(v),
+                    // A reduction
+                    ("D", "J") => ret.deltas.big_d_j = Some(v),
+                    ("D", "JK") => ret.deltas.big_d_jk = Some(v),
+                    ("D", "K") => ret.deltas.big_d_k = Some(v),
+                    ("d", "1") => ret.deltas.d1 = Some(v),
+                    ("d", "2") => ret.deltas.d2 = Some(v),
                     _ => panic!("failed to match '{}' and '{}'", sp[0], sp[1]),
                 }
             } else if PHI.is_match(&line) {

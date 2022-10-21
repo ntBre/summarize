@@ -26,7 +26,7 @@ impl Display for Text {
         writeln!(f, "\nRotational Constants (cm-1):\n")?;
         self.print_rots(f)?;
 
-        writeln!(f, "\nQuartic Distortion Constants (MHz):\n")?;
+        writeln!(f, "\nA-Reduced Quartic Distortion Constants (MHz):\n")?;
         write_dist_consts! {
             f, &self.0, deltas,
             big_delta_j => "DELTA J",
@@ -34,6 +34,16 @@ impl Display for Text {
             big_delta_jk => "DELTA JK",
             delta_j => "delta J",
             delta_k => "delta K",
+        }
+
+        writeln!(f, "\nS-Reduced Quartic Distortion Constants (MHz):\n")?;
+        write_dist_consts! {
+            f, &self.0, deltas,
+            big_d_j => "D J",
+            big_d_jk => "D JK",
+            big_d_k => "D K",
+            d1 => "d 1",
+            d2 => "d 2",
         }
 
         writeln!(f, "\nSextic Distortion Constants (MHz):\n")?;
