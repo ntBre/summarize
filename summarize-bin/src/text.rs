@@ -195,6 +195,20 @@ impl Text {
             }
         }
 
+	// this is kappa for the vibrationally-averaged rotational constants
+        write!(f, "k  ")?;
+        for sum in &self.0 {
+            if sum.rot_equil.len() == 3 {
+                let r = &sum.rots[0];
+                let (a, b, c) = (r[0], r[1], r[2]);
+                let k = (2.0 * b - a - c) / (a - c);
+                write!(f, "{:15.7}", k)?;
+            } else {
+                write!(f, "{:15.7}", "")?;
+            }
+        }
+        writeln!(f)?;
+
         Ok(())
     }
 }
