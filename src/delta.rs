@@ -1,55 +1,24 @@
-use std::{fmt::Display, str::FromStr};
+use std::fmt::Display;
 
-#[derive(Debug, PartialEq)]
-#[allow(non_camel_case_types)]
-pub(crate) enum QuartType {
-    DeltaJ,
-    DeltaK,
-    DeltaJK,
-    deltaJ,
-    deltaK,
-}
-
-impl FromStr for QuartType {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use QuartType::*;
-        match s {
-            "DELTAJ" => Ok(DeltaJ),
-            "DELTAK" => Ok(DeltaK),
-            "DELTAJK" => Ok(DeltaJK),
-            "deltaJ" => Ok(deltaJ),
-            "deltaK" => Ok(deltaK),
-            _ => Err(()),
-        }
-    }
-}
-
-impl Display for QuartType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use QuartType::*;
-        f.pad(match self {
-            DeltaJ => "DELTAJ",
-            DeltaK => "DELTAK",
-            DeltaJK => "DELTAJK",
-            deltaJ => "deltaJ",
-            deltaK => "deltaK",
-        })
-    }
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Delta {
-    pub(crate) typ: QuartType,
-    pub(crate) val: f64,
+    pub big_delta_j: Option<f64>,
+    pub big_delta_k: Option<f64>,
+    pub big_delta_jk: Option<f64>,
+    pub delta_j: Option<f64>,
+    pub delta_k: Option<f64>,
 }
 
-impl Delta {
-    pub fn new(typ: &str, val: f64) -> Self {
-        Self {
-            typ: typ.parse().unwrap(),
-            val,
-        }
+impl Display for Delta {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write_dist_consts!(f, self,
+        big_delta_j => "DELTA J",
+        big_delta_k => "DELTA K",
+        big_delta_jk => "DELTA JK",
+        delta_j => "delta J",
+        delta_k => "delta K",
+           );
+
+        Ok(())
     }
 }

@@ -1,61 +1,28 @@
-use std::{fmt::Display, str::FromStr};
+use std::fmt::Display;
 
-#[derive(Debug, PartialEq)]
-#[allow(non_camel_case_types)]
-pub(crate) enum QuartType {
-    PhiJ,
-    PhiK,
-    PhiJK,
-    PhiKJ,
-    phij,
-    phijk,
-    phik,
-}
-
-impl FromStr for QuartType {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use QuartType::*;
-        match s {
-            "PHIJ" => Ok(PhiJ),
-            "PHIK" => Ok(PhiK),
-            "PHIJK" => Ok(PhiJK),
-            "PHIKJ" => Ok(PhiKJ),
-            "phij" => Ok(phij),
-            "phijk" => Ok(phijk),
-            "phik" => Ok(phik),
-            _ => Err(()),
-        }
-    }
-}
-
-impl Display for QuartType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use QuartType::*;
-        f.pad(match self {
-            PhiJ => "PHIJ",
-            PhiK => "PHIK",
-            PhiJK => "PHIJK",
-            PhiKJ => "PHIKJ",
-            phij => "phij",
-            phijk => "phijk",
-            phik => "phik",
-        })
-    }
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Phi {
-    pub(crate) typ: QuartType,
-    pub(crate) val: f64,
+    pub big_phi_j: Option<f64>,
+    pub big_phi_k: Option<f64>,
+    pub big_phi_jk: Option<f64>,
+    pub big_phi_kj: Option<f64>,
+    pub phi_j: Option<f64>,
+    pub phi_jk: Option<f64>,
+    pub phi_k: Option<f64>,
 }
 
-impl Phi {
-    pub fn new(typ: &str, val: f64) -> Self {
-        Self {
-            typ: typ.parse().unwrap(),
-            val,
+impl Display for Phi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write_dist_consts! {
+            f, self,
+            big_phi_j => "PHI J",
+            big_phi_k => "PHI K",
+            big_phi_jk => "PHI JK",
+            big_phi_kj => "PHI KJ",
+            phi_j => "phi j",
+            phi_jk => "phi jk",
+            phi_k => "phi k",
         }
+        Ok(())
     }
 }

@@ -16,6 +16,16 @@ use symm::{Atom, Irrep, Molecule};
 #[cfg(test)]
 mod tests;
 
+macro_rules! write_dist_consts {
+    ($w:ident, $struct:ident, $($field:ident => $name:expr$(,)?),*) => {
+	$(
+	    if let Some(d) = $struct.$field {
+		write!($w, "{:<8}{:18.10}", $name, d)?;
+	    }
+	)*
+    };
+}
+
 mod delta;
 mod phi;
 
@@ -84,10 +94,10 @@ pub struct Summary {
     pub rot_equil: Vec<f64>,
 
     /// quartic distortion coefficients
-    pub deltas: Vec<Delta>,
+    pub deltas: Delta,
 
     /// sextic distortion coefficients
-    pub phis: Vec<Phi>,
+    pub phis: Phi,
 
     // pub rhead: Vec<String>,
     // pub ralpha: Vec<f64>,
@@ -288,16 +298,28 @@ impl Summary {
                 );
             } else if DELTA.is_match(&line) {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
-                ret.deltas.push(Delta::new(
-                    &format!("{}{}", sp[0], sp[1]),
-                    sp[4].parse().unwrap(),
-                ));
+                let v: f64 = sp[4].parse().unwrap();
+                match (sp[0], sp[1]) {
+                    ("DELTA", "J") => ret.deltas.big_delta_j = Some(v),
+                    ("DELTA", "K") => ret.deltas.big_delta_k = Some(v),
+                    ("DELTA", "JK") => ret.deltas.big_delta_jk = Some(v),
+                    ("delta", "J") => ret.deltas.delta_j = Some(v),
+                    ("delta", "K") => ret.deltas.delta_k = Some(v),
+                    _ => panic!("failed to match '{}' and '{}'", sp[0], sp[1]),
+                }
             } else if PHI.is_match(&line) {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
-                ret.phis.push(Phi::new(
-                    &format!("{}{}", sp[0], sp[1]),
-                    sp[4].replace('D', "E").parse().unwrap(),
-                ));
+                let v: f64 = sp[4].replace('D', "E").parse().unwrap();
+                match (sp[0], sp[1]) {
+                    ("PHI", "J") => ret.phis.big_phi_j = Some(v),
+                    ("PHI", "K") => ret.phis.big_phi_k = Some(v),
+                    ("PHI", "JK") => ret.phis.big_phi_jk = Some(v),
+                    ("PHI", "KJ") => ret.phis.big_phi_kj = Some(v),
+                    ("phi", "j") => ret.phis.phi_j = Some(v),
+                    ("phi", "jk") => ret.phis.phi_jk = Some(v),
+                    ("phi", "k") => ret.phis.phi_k = Some(v),
+                    _ => panic!("failed to match '{}' and '{}'", sp[0], sp[1]),
+                }
             }
         }
         let pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
@@ -400,14 +422,10 @@ impl Display for Summary {
         }
 
         writeln!(f, "\nQuartic Distortion Constants (MHz):")?;
-        for Delta { typ, val } in &self.deltas {
-            writeln!(f, "{typ:>8}{val:14.8}")?;
-        }
+        writeln!(f, "{}", self.deltas)?;
 
         writeln!(f, "\nSextic Distortion Constants (MHz):")?;
-        for Phi { typ, val } in &self.phis {
-            writeln!(f, "{typ:>8}{val:14.8}")?;
-        }
+        writeln!(f, "{}", self.phis)?;
 
         Ok(())
     }

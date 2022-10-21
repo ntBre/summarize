@@ -32,13 +32,56 @@ impl Text {
     }
 }
 
+macro_rules! write_dist_consts {
+    ($w:ident, $iter: expr, $struct:ident,
+     $($field:ident => $name:expr$(,)?),*) => {
+	$(
+	    write!($w, "{:<8}", $name)?;
+	    for sum in $iter {
+		if let Some(d) = sum.$struct.$field {
+		    write!($w, "{:18.10}", d)?;
+		} else {
+		    write!($w, "{:18.10}", "")?;
+		}
+	    }
+	    writeln!($w)?;
+	)*
+    };
+}
+
 impl Display for Text {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Vibrational Frequencies (cm-1):")?;
+        writeln!(f, "Vibrational Frequencies (cm-1):\n")?;
         self.print_freqs(f)?;
 
-        writeln!(f, "\nRotational Constants (cm-1):")?;
+        writeln!(f, "\nRotational Constants (cm-1):\n")?;
         self.print_rots(f)?;
+
+        writeln!(f, "\nQuartic Distortion Constants (MHz):\n")?;
+        write_dist_consts! {
+            f, &self.0, deltas,
+            big_delta_j => "DELTA J",
+            big_delta_k => "DELTA K",
+            big_delta_jk => "DELTA JK",
+            delta_j => "delta J",
+            delta_k => "delta K",
+        }
+
+        writeln!(f, "\nSextic Distortion Constants (MHz):\n")?;
+        write_dist_consts! {
+            f, &self.0, phis,
+            big_phi_j => "PHI J",
+            big_phi_k => "PHI K",
+            big_phi_jk => "PHI JK",
+            big_phi_kj => "PHI KJ",
+            phi_j => "phi j",
+            phi_jk => "phi jk",
+            phi_k => "phi k",
+        }
+
+        writeln!(f, "\nFermi Resonances:\n")?;
+
+        writeln!(f, "\nCoriolis Resonances:\n")?;
 
         Ok(())
     }
