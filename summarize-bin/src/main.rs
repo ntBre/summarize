@@ -1,3 +1,5 @@
+use clap::Parser;
+
 use summarize::Summary;
 
 use crate::text::Text;
@@ -35,12 +37,59 @@ macro_rules! write_dist_consts {
 
 mod text;
 
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// only print the vibrational frequency summary
+    #[arg(short, long)]
+    vib: bool,
+
+    infiles: Vec<String>,
+}
+
+fn just_vib(summaries: &Vec<Summary>) {
+    for sum in summaries {
+        println!("Vibrational Frequencies (cm⁻¹):");
+        println!("ZPT = {:.1}", sum.zpt);
+        let width = 8;
+        println!(
+            "{:>5}{:>5}{:>width$}{:>width$}{:>width$}",
+            "Mode",
+            "Symm",
+            "Harm",
+            "Fund",
+            "Corr",
+            width = width
+        );
+        let prec = 1;
+        for i in 0..sum.harm.len() {
+            println!(
+                "{:5}{:>5}{:width$.prec$}{:width$.prec$}{:width$.prec$}",
+                i + 1,
+                sum.irreps[i],
+                sum.harm[i],
+                sum.fund[i],
+                sum.corr[i],
+                width = width,
+                prec = prec,
+            );
+        }
+        println!();
+    }
+}
+
 fn main() {
-    let infiles: Vec<_> = std::env::args().skip(1).collect();
-    if infiles.is_empty() {
+    let args = Args::parse();
+    if args.infiles.is_empty() {
         panic!("usage: summarize FILENAME...");
     }
-    let summaries: Vec<_> = infiles.iter().map(Summary::new).collect();
 
-    println!("\n{}", Text(summaries));
+    let summaries: Vec<_> = args.infiles.iter().map(Summary::new).collect();
+
+    if args.vib {
+        just_vib(&summaries);
+    } else {
+        println!("\n{}", Text(summaries));
+    }
 }
