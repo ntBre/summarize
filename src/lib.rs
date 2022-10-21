@@ -63,6 +63,8 @@ lazy_static! {
     static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
     static ref DELTA: Regex = Regex::new(r"(?i)^  delta [jk]+ ").unwrap();
     static ref PHI: Regex = Regex::new(r"(?i)^  phi [jk]+ ").unwrap();
+    static ref FERMI: Regex = Regex::new(r"(?i)^ INPUTED FERMI").unwrap();
+    static ref BLANK: Regex = Regex::new(r"^\s*$").unwrap();
 }
 
 #[derive(Default, Debug, PartialEq)]
@@ -102,7 +104,10 @@ pub struct Summary {
     // pub rhead: Vec<String>,
     // pub ralpha: Vec<f64>,
     // pub requil: Vec<f64>,
-    // pub fermi: Vec<String>,
+
+    /// type-1 and -2 fermi resonances. map of each mode to its equivalences
+    pub fermi: HashMap<usize, Vec<(usize, usize)>>,
+
     pub zpt: f64,
     // pub lin: bool,
     // pub imag: bool,
@@ -115,7 +120,15 @@ enum State {
     Geom,
     Lxm,
     Rots,
+    Fermi1,
+    Fermi2,
     None,
+}
+
+impl State {
+    fn is_fermi(&self) -> bool {
+        matches!(self, State::Fermi1 | State::Fermi2)
+    }
 }
 
 impl Summary {
@@ -319,6 +332,31 @@ impl Summary {
                     ("phi", "jk") => ret.phis.phi_jk = Some(v),
                     ("phi", "k") => ret.phis.phi_k = Some(v),
                     _ => panic!("failed to match '{}' and '{}'", sp[0], sp[1]),
+                }
+            } else if FERMI.is_match(&line) {
+                let v = line.split_ascii_whitespace().nth(2).unwrap();
+                if v == "1" {
+                    state = State::Fermi1;
+                    skip = 2;
+                } else if v == "2" {
+                    state = State::Fermi2;
+                    skip = 3;
+                }
+            } else if state.is_fermi() && BLANK.is_match(&line) {
+                state = State::None;
+            } else if state.is_fermi() {
+                let mut v = line.split_ascii_whitespace();
+                let a = v.next().unwrap().parse::<usize>().unwrap();
+                if state == State::Fermi1 {
+                    let b = v.next().unwrap().parse::<usize>().unwrap();
+                    let e = ret.fermi.entry(b).or_default();
+                    e.push((a, a));
+                } else if state == State::Fermi2 {
+                    // skip the + connecting two parts of a Fermi 2
+                    let b = v.nth(1).unwrap().parse::<usize>().unwrap();
+                    let c = v.next().unwrap().parse::<usize>().unwrap();
+                    let e = ret.fermi.entry(c).or_default();
+                    e.push((a, b));
                 }
             }
         }

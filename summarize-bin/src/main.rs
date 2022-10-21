@@ -80,6 +80,23 @@ impl Display for Text {
         }
 
         writeln!(f, "\nFermi Resonances:\n")?;
+        for (i, sum) in self.0.iter().enumerate() {
+            writeln!(f, "Molecule {}", i + 1)?;
+            let mut keys: Vec<_> = sum.fermi.keys().collect();
+            keys.sort_unstable();
+            for c in keys {
+                let res = &sum.fermi[c];
+                for (a, b) in res {
+                    if a == b {
+                        write!(f, "2v{a} = ")?;
+                    } else {
+                        write!(f, "v{a} + v{b} = ")?;
+                    }
+                }
+                writeln!(f, "v{c}")?;
+            }
+            writeln!(f)?;
+        }
 
         writeln!(f, "\nCoriolis Resonances:\n")?;
 
