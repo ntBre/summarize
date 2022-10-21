@@ -73,10 +73,13 @@ lazy_static! {
     static ref HEADER: Regex = Regex::new(r"^(\s*\d+)+\s*$").unwrap();
     static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
     static ref DELTA: Regex = Regex::new(r"(?i)^  d(elta)? [jk12]+ ").unwrap();
-    static ref PHI: Regex = Regex::new(r"(?i)^  phi [jk]+ ").unwrap();
+    static ref PHI: Regex = Regex::new(r"(?i)^  (p)?h(i)? [jk123]+ ").unwrap();
     static ref FERMI: Regex = Regex::new(r"(?i)^ INPUTED FERMI").unwrap();
     static ref CORIOL: Regex = Regex::new(r"(?i)^ INPUTED CORIOLIS").unwrap();
+    /// empty line
     static ref BLANK: Regex = Regex::new(r"^\s*$").unwrap();
+    /// can also occur at the end of the CURVIL section
+    static ref OPTDL: Regex = Regex::new(r"^ I OPTDL").unwrap();
     static ref COORD: Regex = Regex::new(r"VIBRATIONALLY AVERAGED COORDINATES").unwrap();
     static ref CURVIL: Regex = Regex::new(r"^ CURVILINEAR INTERNAL COORDINATES").unwrap();
 }
@@ -355,16 +358,16 @@ impl Summary {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
                 let v: f64 = sp[4].parse().unwrap();
                 match (sp[0], sp[1]) {
-                    // S reduction
+                    // A reduction
                     ("DELTA", "J") => ret.deltas.big_delta_j = Some(v),
                     ("DELTA", "K") => ret.deltas.big_delta_k = Some(v),
                     ("DELTA", "JK") => ret.deltas.big_delta_jk = Some(v),
                     ("delta", "J") => ret.deltas.delta_j = Some(v),
                     ("delta", "K") => ret.deltas.delta_k = Some(v),
-                    // A reduction
-                    ("D", "J") => ret.deltas.big_d_j = Some(v),
-                    ("D", "JK") => ret.deltas.big_d_jk = Some(v),
-                    ("D", "K") => ret.deltas.big_d_k = Some(v),
+                    // S reduction
+                    ("D", "J") => ret.deltas.d_j = Some(v),
+                    ("D", "JK") => ret.deltas.d_jk = Some(v),
+                    ("D", "K") => ret.deltas.d_k = Some(v),
                     ("d", "1") => ret.deltas.d1 = Some(v),
                     ("d", "2") => ret.deltas.d2 = Some(v),
                     _ => panic!("failed to match '{}' and '{}'", sp[0], sp[1]),
@@ -373,6 +376,7 @@ impl Summary {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
                 let v: f64 = sp[4].replace('D', "E").parse().unwrap();
                 match (sp[0], sp[1]) {
+                    // A reduction
                     ("PHI", "J") => ret.phis.big_phi_j = Some(v),
                     ("PHI", "K") => ret.phis.big_phi_k = Some(v),
                     ("PHI", "JK") => ret.phis.big_phi_jk = Some(v),
@@ -380,6 +384,14 @@ impl Summary {
                     ("phi", "j") => ret.phis.phi_j = Some(v),
                     ("phi", "jk") => ret.phis.phi_jk = Some(v),
                     ("phi", "k") => ret.phis.phi_k = Some(v),
+                    // S reduction
+                    ("H", "J") => ret.phis.h_j = Some(v),
+                    ("H", "JK") => ret.phis.h_jk = Some(v),
+                    ("H", "KJ") => ret.phis.h_kj = Some(v),
+                    ("H", "K") => ret.phis.h_k = Some(v),
+                    ("h", "1") => ret.phis.h1 = Some(v),
+                    ("h", "2") => ret.phis.h2 = Some(v),
+                    ("h", "3") => ret.phis.h3 = Some(v),
                     _ => panic!("failed to match '{}' and '{}'", sp[0], sp[1]),
                 }
             } else if FERMI.is_match(&line) {
@@ -429,7 +441,7 @@ impl Summary {
                 state = State::Curvil;
                 skip = 4;
             } else if state.is_curvil() {
-                if BLANK.is_match(&line) {
+                if BLANK.is_match(&line) || OPTDL.is_match(&line) {
                     state = State::None;
                     continue;
                 }

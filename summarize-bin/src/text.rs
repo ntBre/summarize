@@ -39,14 +39,14 @@ impl Display for Text {
         writeln!(f, "\nS-Reduced Quartic Distortion Constants (MHz):\n")?;
         write_dist_consts! {
             f, &self.0, deltas,
-            big_d_j => "D J",
-            big_d_jk => "D JK",
-            big_d_k => "D K",
+            d_j => "D J",
+            d_jk => "D JK",
+            d_k => "D K",
             d1 => "d 1",
             d2 => "d 2",
         }
 
-        writeln!(f, "\nSextic Distortion Constants (MHz):\n")?;
+        writeln!(f, "\nA-Reduced Sextic Distortion Constants (MHz):\n")?;
         write_dist_consts! {
             f, &self.0, phis,
             big_phi_j => "PHI J",
@@ -56,6 +56,18 @@ impl Display for Text {
             phi_j => "phi j",
             phi_jk => "phi jk",
             phi_k => "phi k",
+        }
+
+        writeln!(f, "\nS-Reduced Sextic Distortion Constants (MHz):\n")?;
+        write_dist_consts! {
+            f, &self.0, phis,
+            h_j => "H J",
+            h_jk => "H JK",
+            h_kj => "H KJ",
+            h_k => "H K",
+            h1 => "h 1",
+            h2 => "h 2",
+            h3 => "h 3",
         }
 
         writeln!(f, "\nCurvilinear Coordinates:\n")?;
@@ -86,11 +98,12 @@ impl Display for Text {
                 )?;
                 writeln!(f, "{:18.7}{:18.7}", equil, alpha)?;
             }
+            writeln!(f)?;
         }
 
         writeln!(f, "\nFermi Resonances:\n")?;
         for (i, sum) in self.0.iter().enumerate() {
-            writeln!(f, "Molecule {}", i + 1)?;
+            writeln!(f, "Molecule {}\n", i + 1)?;
             let mut keys: Vec<_> = sum.fermi.keys().collect();
             keys.sort_unstable();
             for c in keys {
@@ -108,10 +121,8 @@ impl Display for Text {
 
         writeln!(f, "\nCoriolis Resonances:\n")?;
         for (i, sum) in self.0.iter().enumerate() {
-            writeln!(f, "Molecule {}", i + 1)?;
+            writeln!(f, "Molecule {}\n", i + 1)?;
             writeln!(f, "{:>8}{:>8}", "Modes", "Axes")?;
-            // 16 is the sum of the eights above
-            writeln!(f, "{:->16}", "")?;
             let mut keys: Vec<_> = sum.coriolis.keys().collect();
             keys.sort_unstable();
             for c in keys {
@@ -196,6 +207,7 @@ impl Text {
             }
             writeln!(f)?;
         }
+
         Ok(())
     }
 

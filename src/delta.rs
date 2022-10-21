@@ -10,9 +10,9 @@ pub struct Delta {
     pub delta_k: Option<f64>,
 
     /// these constants are in the S-reduced Watson Hamiltonian
-    pub big_d_j: Option<f64>,
-    pub big_d_jk: Option<f64>,
-    pub big_d_k: Option<f64>,
+    pub d_j: Option<f64>,
+    pub d_jk: Option<f64>,
+    pub d_k: Option<f64>,
     pub d1: Option<f64>,
     pub d2: Option<f64>,
 }
