@@ -48,6 +48,36 @@ impl Display for Text {
             phi_k => "phi k",
         }
 
+        writeln!(f, "\nCurvilinear Coordinates:\n")?;
+        for (i, sum) in self.0.iter().enumerate() {
+            writeln!(f, "Molecule {}\n", i + 1)?;
+            writeln!(f, "{:^21}{:>18}{:>18}", "Coord", "R(EQUIL)", "R(ALPHA)")?;
+            let vals = sum.requil.iter().zip(&sum.ralpha);
+            for (curvil, (alpha, equil)) in sum.curvils.iter().zip(vals) {
+                use summarize::curvil::Curvil::*;
+                write!(
+                    f,
+                    "{:21}",
+                    match curvil {
+                        Bond(a, b) => format!(
+                            "r({:>2}{a:<2} - {:>2}{b:<2})",
+                            sum.geom.atoms[*a - 1].label(),
+                            sum.geom.atoms[*b - 1].label()
+                        ),
+                        Angle(a, b, c) => format!(
+                            "<({:>2}{a:<2} - {:>2}{b:<2} - {:>2}{c:<2})",
+                            sum.geom.atoms[*a - 1].label(),
+                            sum.geom.atoms[*b - 1].label(),
+                            sum.geom.atoms[*c - 1].label()
+                        ),
+                        // pretty sure nothing else is printed in this part
+                        Torsion(_, _, _, _) => todo!(),
+                    }
+                )?;
+                writeln!(f, "{:18.7}{:18.7}", equil, alpha)?;
+            }
+        }
+
         writeln!(f, "\nFermi Resonances:\n")?;
         for (i, sum) in self.0.iter().enumerate() {
             writeln!(f, "Molecule {}", i + 1)?;
@@ -195,7 +225,7 @@ impl Text {
             }
         }
 
-	// this is kappa for the vibrationally-averaged rotational constants
+        // this is kappa for the vibrationally-averaged rotational constants
         write!(f, "k  ")?;
         for sum in &self.0 {
             if sum.rot_equil.len() == 3 {

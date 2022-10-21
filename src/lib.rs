@@ -7,6 +7,7 @@ use std::{
     str::FromStr,
 };
 
+use curvil::Curvil;
 use delta::Delta;
 use lazy_static::lazy_static;
 use phi::Phi;
@@ -28,6 +29,16 @@ macro_rules! write_dist_consts {
 
 mod delta;
 mod phi;
+
+pub mod curvil {
+    /// represented only by the indices into the geometry
+    #[derive(Debug, PartialEq)]
+    pub enum Curvil {
+        Bond(usize, usize),
+        Angle(usize, usize, usize),
+        Torsion(usize, usize, usize, usize),
+    }
+}
 
 const BAD_FLOAT: f64 = 999999999.9;
 
@@ -66,6 +77,8 @@ lazy_static! {
     static ref FERMI: Regex = Regex::new(r"(?i)^ INPUTED FERMI").unwrap();
     static ref CORIOL: Regex = Regex::new(r"(?i)^ INPUTED CORIOLIS").unwrap();
     static ref BLANK: Regex = Regex::new(r"^\s*$").unwrap();
+    static ref COORD: Regex = Regex::new(r"VIBRATIONALLY AVERAGED COORDINATES").unwrap();
+    static ref CURVIL: Regex = Regex::new(r"^ CURVILINEAR INTERNAL COORDINATES").unwrap();
 }
 
 #[derive(Default, Debug, PartialEq)]
@@ -113,14 +126,18 @@ pub struct Summary {
 
     /// zero-point vibrational energy
     pub zpt: f64,
-    // pub lin: bool,
-    // pub rhead: Vec<String>,
-    // pub ralpha: Vec<f64>,
-    // pub requil: Vec<f64>,
-    // pub imag: bool,
+
+    /// inputted curvilinear internal coordinates
+    pub curvils: Vec<Curvil>,
+
+    /// R(ALPHA) values of the curvilinear coordinates in `curvil`
+    pub ralpha: Vec<f64>,
+
+    /// R(EQUIL) values of the curvilinear coordinates in `curvil`
+    pub requil: Vec<f64>,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 enum State {
     Fund,
     Corr,
@@ -130,12 +147,26 @@ enum State {
     Fermi1,
     Fermi2,
     Coriolis,
+    Curvil,
+    Coords,
     None,
 }
 
 impl State {
     fn is_fermi(&self) -> bool {
         matches!(self, State::Fermi1 | State::Fermi2)
+    }
+
+    fn is_coords(&self) -> bool {
+        matches!(self, State::Coords)
+    }
+
+    /// Returns `true` if the state is [`Curvil`].
+    ///
+    /// [`Curvil`]: State::Curvil
+    #[must_use]
+    fn is_curvil(&self) -> bool {
+        matches!(self, Self::Curvil)
     }
 }
 
@@ -285,6 +316,9 @@ impl Summary {
                 rot_good = true;
             } else if rot_good && line.contains("BZA") {
                 state = State::Rots;
+            } else if state == State::Rots && COORD.is_match(&line) {
+                state = State::Coords;
+                skip = 12;
             } else if state == State::Rots && rot_good {
                 let mut one = false;
                 for state in &rot_states {
@@ -378,6 +412,52 @@ impl Summary {
                 let axis = v.next().unwrap().parse::<usize>().unwrap();
                 let e = ret.coriolis.entry((a, b)).or_default();
                 e.push(axis);
+            } else if state.is_coords() && BLANK.is_match(&line) {
+                state = State::None;
+            } else if state.is_coords() {
+                let v = line.split_ascii_whitespace().collect::<Vec<_>>();
+                ret.requil.push(v[2].parse().unwrap());
+                ret.ralpha.push(v[4].parse().unwrap());
+            } else if CURVIL.is_match(&line) {
+                state = State::Curvil;
+                skip = 4;
+            } else if state.is_curvil() {
+                if BLANK.is_match(&line) {
+                    state = State::None;
+                    continue;
+                }
+                let mut in_parens = false;
+                let mut new_line = String::with_capacity(line.len());
+                // trying to parse a line like:
+                //
+                // ( 1)        BOND               1.32539       2(C )     3(C )
+                //
+                // where the atom labels can be two atoms wide, so we can't just
+                // split on whitespace
+                for c in line.chars() {
+                    if c == '(' {
+                        new_line.push(' ');
+                        in_parens = true;
+                    } else if c == ')' {
+                        new_line.push(' ');
+                        in_parens = false;
+                    } else if in_parens && c == ' ' {
+                        continue;
+                    } else {
+                        new_line.push(c);
+                    }
+                }
+                let mut v = new_line.split_ascii_whitespace();
+                let typ = v.nth(1).unwrap();
+                let ids: Vec<_> =
+                    v.skip(1).step_by(2).flat_map(usize::from_str).collect();
+                use curvil::Curvil::*;
+                ret.curvils.push(match typ {
+                    "BOND" => Bond(ids[0], ids[1]),
+                    "ANGLE" => Angle(ids[0], ids[1], ids[2]),
+                    "TORSION" => Torsion(ids[0], ids[1], ids[2], ids[3]),
+                    _ => panic!("unrecognized curvil type {typ}"),
+                });
             }
         }
         let pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
