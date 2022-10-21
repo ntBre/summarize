@@ -85,20 +85,46 @@ impl Display for Text {
             let mut keys: Vec<_> = sum.fermi.keys().collect();
             keys.sort_unstable();
             for c in keys {
-                let res = &sum.fermi[c];
-                for (a, b) in res {
+                for (a, b) in &sum.fermi[c] {
                     if a == b {
-                        write!(f, "2v{a} = ")?;
+                        write!(f, "2w{a} = ")?;
                     } else {
-                        write!(f, "v{a} + v{b} = ")?;
+                        write!(f, "w{a} + w{b} = ")?;
                     }
                 }
-                writeln!(f, "v{c}")?;
+                writeln!(f, "w{c}")?;
             }
             writeln!(f)?;
         }
 
         writeln!(f, "\nCoriolis Resonances:\n")?;
+        for (i, sum) in self.0.iter().enumerate() {
+            writeln!(f, "Molecule {}", i + 1)?;
+            writeln!(f, "{:>8}{:>8}", "Modes", "Axes")?;
+	    // 16 is the sum of the eights above
+            writeln!(f, "{:->16}", "")?;
+            let mut keys: Vec<_> = sum.coriolis.keys().collect();
+            keys.sort_unstable();
+            for c in keys {
+                let (a, b) = c;
+                // two spaces here and then max axes pads the rest of the room
+                write!(f, "w{a:<2} = w{b:<2}  ")?;
+                for axis in &sum.coriolis[c] {
+                    write!(
+                        f,
+                        "{:>2}",
+                        match axis {
+                            3 => "C",
+                            2 => "B",
+                            1 => "A",
+                            _ => "?",
+                        }
+                    )?;
+                }
+                writeln!(f)?;
+            }
+            writeln!(f)?;
+        }
 
         Ok(())
     }

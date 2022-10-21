@@ -64,6 +64,7 @@ lazy_static! {
     static ref DELTA: Regex = Regex::new(r"(?i)^  delta [jk]+ ").unwrap();
     static ref PHI: Regex = Regex::new(r"(?i)^  phi [jk]+ ").unwrap();
     static ref FERMI: Regex = Regex::new(r"(?i)^ INPUTED FERMI").unwrap();
+    static ref CORIOL: Regex = Regex::new(r"(?i)^ INPUTED CORIOLIS").unwrap();
     static ref BLANK: Regex = Regex::new(r"^\s*$").unwrap();
 }
 
@@ -101,15 +102,21 @@ pub struct Summary {
     /// sextic distortion coefficients
     pub phis: Phi,
 
+    /// inputed type-1 and -2 fermi resonances. map of each mode to its
+    /// equivalences. Note that these are not necessarily the resonances
+    /// detected *or* used by spectro, only the ones reported in the "INPUTED
+    /// ... RESONANCE DATA" section
+    pub fermi: HashMap<usize, Vec<(usize, usize)>>,
+
+    /// inputed coriolis resonances. map of modes to axes
+    pub coriolis: HashMap<(usize, usize), Vec<usize>>,
+
+    /// zero-point vibrational energy
+    pub zpt: f64,
+    // pub lin: bool,
     // pub rhead: Vec<String>,
     // pub ralpha: Vec<f64>,
     // pub requil: Vec<f64>,
-
-    /// type-1 and -2 fermi resonances. map of each mode to its equivalences
-    pub fermi: HashMap<usize, Vec<(usize, usize)>>,
-
-    pub zpt: f64,
-    // pub lin: bool,
     // pub imag: bool,
 }
 
@@ -122,6 +129,7 @@ enum State {
     Rots,
     Fermi1,
     Fermi2,
+    Coriolis,
     None,
 }
 
@@ -358,6 +366,18 @@ impl Summary {
                     let e = ret.fermi.entry(c).or_default();
                     e.push((a, b));
                 }
+            } else if CORIOL.is_match(&line) {
+                state = State::Coriolis;
+                skip = 2;
+            } else if state == State::Coriolis && BLANK.is_match(&line) {
+                state = State::None;
+            } else if state == State::Coriolis {
+                let mut v = line.split_ascii_whitespace();
+                let a = v.next().unwrap().parse::<usize>().unwrap();
+                let b = v.next().unwrap().parse::<usize>().unwrap();
+                let axis = v.next().unwrap().parse::<usize>().unwrap();
+                let e = ret.coriolis.entry((a, b)).or_default();
+                e.push(axis);
             }
         }
         let pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
