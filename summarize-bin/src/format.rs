@@ -287,6 +287,8 @@ where
             phi_k =>  phi_labels[6],
         }
 
+        writeln!(f, "{}\n", self.post_table())?;
+
         writeln!(f, "{}", self.pre_table(TableType::DistS, 1 + nsum))?;
         self.dist_header(nsum, f, &dashes)?;
 
@@ -311,6 +313,8 @@ where
             h2 =>  phi_labels[12],
             h3 =>  phi_labels[13],
         }
+
+        writeln!(f, "{}", self.post_table())?;
 
         Ok(())
     }
