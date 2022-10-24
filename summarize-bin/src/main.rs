@@ -2,7 +2,7 @@ use clap::Parser;
 
 use summarize::Summary;
 
-use crate::text::Text;
+use crate::{latex::Latex, text::Text};
 
 /// macro for generating max_* methods on `Text`, inspired by this
 /// https://github.com/jonhoo/fantoccini/pull/186#discussion_r990712599
@@ -36,6 +36,7 @@ macro_rules! write_dist_consts {
 }
 
 mod format;
+mod latex;
 mod text;
 
 /// Simple program to greet a person
@@ -45,6 +46,10 @@ struct Args {
     /// only print the vibrational frequency summary
     #[arg(short, long)]
     vib: bool,
+
+    /// print the output in LaTeX format
+    #[arg(short, long)]
+    tex: bool,
 
     infiles: Vec<String>,
 }
@@ -90,6 +95,8 @@ fn main() {
 
     if args.vib {
         just_vib(&summaries);
+    } else if args.tex {
+        println!("\n{}", Latex(summaries));
     } else {
         println!("\n{}", Text(summaries));
     }

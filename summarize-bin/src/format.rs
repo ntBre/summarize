@@ -1,13 +1,48 @@
 use summarize::Summary;
 
+pub enum TableType {
+    Vib,
+}
+
 pub trait Format
 where
     for<'a> &'a Self: IntoIterator<Item = &'a Summary>,
 {
+    /// separator between fields in a table
+    const SEP: &'static str;
+
+    /// end of row delimiter
+    const END: &'static str;
+
     fn max_harms(&self) -> usize;
     fn max_corrs(&self) -> usize;
     fn max_rots(&self) -> usize;
     fn len(&self) -> usize;
+
+    /// return the label for the harmonic frequencies. idx starts at 1
+    fn omega(&self, idx: usize) -> String;
+
+    /// return the label for the anharmonic frequencies. idx starts at 1
+    fn nu(&self, idx: usize) -> String;
+
+    fn sep(&self) -> &'static str {
+        Self::SEP
+    }
+
+    fn end(&self, end: bool) -> &'static str {
+        if !end {
+            Self::END
+        } else {
+            Self::SEP
+        }
+    }
+
+    /// function for including horizontal lines in the output
+    fn line(width: usize) -> String;
+
+    fn pre_table(&self, typ: TableType, cols: usize) -> String;
+
+    fn post_table(&self) -> &'static str;
 
     fn print_freqs(
         &self,
@@ -17,54 +52,88 @@ where
         let max_corrs = self.max_corrs();
         let nsum = self.len();
         // 4 for w/v label, 6 for each symmetry label, and 8 for each frequency
-        let dashes = vec!["-"; 4 + 14 * nsum];
-        let dashes = dashes.join("");
+        let dashes = Self::line(4 + 14 * nsum);
 
-        write!(f, "Mode")?;
-        for _ in 0..nsum {
-            write!(f, "{:>6}{:>8}", "Symm", "Freq.")?;
+        writeln!(f, "{}", self.pre_table(TableType::Vib, 1 + 2 * nsum))?;
+
+        write!(f, "Mode{}", Self::SEP)?;
+        for i in 0..nsum {
+            write!(
+                f,
+                "{:>6}{}{:>8}{}",
+                "Symm",
+                Self::SEP,
+                "Freq.",
+                self.end(i < nsum - 1)
+            )?;
         }
         writeln!(f, "\n{dashes}")?;
 
         for i in 0..max_harms {
-            write!(f, " w{:<2}", i + 1)?;
-            for sum in self {
+            write!(f, " {}{}", self.omega(i + 1), Self::SEP)?;
+            for (j, sum) in self.into_iter().enumerate() {
                 if let Some(v) = sum.harm.get(i) {
                     write!(
                         f,
-                        "{:>6}{:8.1}",
+                        "{:>6}{}{:8.1}{}",
                         sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
-                        v
+                        self.sep(),
+                        v,
+                        self.end(j < nsum - 1)
                     )?;
                 } else {
-                    write!(f, "{:14}", " ")?;
+                    write!(
+                        f,
+                        "{:6}{}{:8}{}",
+                        "",
+                        self.sep(),
+                        "",
+                        self.end(j < nsum - 1)
+                    )?;
                 }
             }
             writeln!(f)?;
         }
         writeln!(f, "{}", dashes)?;
-        write!(f, "ZPT ")?;
-        for sum in self {
-            write!(f, "{:14.1}", sum.zpt)?;
+        write!(f, "ZPT {}", self.sep())?;
+        for (i, sum) in self.into_iter().enumerate() {
+            write!(
+                f,
+                "{:6}{}{:8.1}{}",
+                "",
+                self.sep(),
+                sum.zpt,
+                self.end(i < nsum - 1)
+            )?;
         }
         writeln!(f)?;
 
         for i in 0..max_corrs {
-            write!(f, " v{:<2}", i + 1)?;
-            for sum in self {
+            write!(f, "{}{}", self.nu(i + 1), self.sep())?;
+            for (j, sum) in self.into_iter().enumerate() {
                 if let Some(v) = sum.corr.get(i) {
                     write!(
                         f,
-                        "{:>6}{:8.1}",
+                        "{:>6}{}{:8.1}{}",
                         sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
-                        v
+                        self.sep(),
+                        v,
+                        self.end(j < nsum - 1)
                     )?;
                 } else {
-                    write!(f, "{:14}", " ")?;
+                    write!(
+                        f,
+                        "{:6}{}{:8}{}",
+                        "",
+                        self.sep(),
+                        "",
+                        self.end(j < nsum - 1)
+                    )?;
                 }
             }
             writeln!(f)?;
         }
+        writeln!(f, "{}", self.post_table())?;
 
         Ok(())
     }
@@ -129,7 +198,6 @@ macro_rules! impl_display {
     ($t:ty) => {
 	impl ::std::fmt::Display for $t {
 	    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		writeln!(f, "Vibrational Frequencies (cm-1):\n")?;
 		self.print_freqs(f)?;
 
 		writeln!(f, "\nRotational Constants (cm-1):\n")?;
