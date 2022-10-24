@@ -96,7 +96,17 @@ fn main() {
     if args.vib {
         just_vib(&summaries);
     } else if args.tex {
-        println!("\n{}", Latex(summaries));
+        println!(
+            r"\documentclass{{article}}
+
+\begin{{document}}
+
+{}
+
+\end{{document}}
+",
+            Latex(summaries)
+        );
     } else {
         println!("\n{}", Text(summaries));
     }

@@ -1,4 +1,5 @@
 use summarize::Summary;
+use symm::Irrep;
 
 pub enum TableType {
     Vib,
@@ -24,6 +25,11 @@ where
 
     /// return the label for the anharmonic frequencies. idx starts at 1
     fn nu(&self, idx: usize) -> String;
+
+    /// return the desired format for an irrep
+    fn irrep(&self, ir: &Irrep) -> String {
+        ir.to_string()
+    }
 
     fn sep(&self) -> &'static str {
         Self::SEP
@@ -61,7 +67,7 @@ where
             write!(
                 f,
                 "{:>6}{}{:>8}{}",
-                "Symm",
+                "Symm.",
                 Self::SEP,
                 "Freq.",
                 self.end(i < nsum - 1)
@@ -75,8 +81,10 @@ where
                 if let Some(v) = sum.harm.get(i) {
                     write!(
                         f,
-                        "{:>6}{}{:8.1}{}",
-                        sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
+                        "{:>8}{}{:8.1}{}",
+                        self.irrep(
+                            sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
+                        ),
                         self.sep(),
                         v,
                         self.end(j < nsum - 1)
@@ -84,7 +92,7 @@ where
                 } else {
                     write!(
                         f,
-                        "{:6}{}{:8}{}",
+                        "{:8}{}{:8}{}",
                         "",
                         self.sep(),
                         "",
@@ -115,7 +123,9 @@ where
                     write!(
                         f,
                         "{:>6}{}{:8.1}{}",
-                        sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
+                        self.irrep(
+                            sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
+                        ),
                         self.sep(),
                         v,
                         self.end(j < nsum - 1)
