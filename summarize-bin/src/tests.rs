@@ -1,7 +1,7 @@
 use std::{fmt::Write, fs::read_to_string};
 use summarize::Summary;
 
-use crate::{text::Text, latex::Latex};
+use crate::{latex::Latex, text::Text};
 
 #[test]
 fn text() {
@@ -20,7 +20,7 @@ fn text() {
         use std::io::Write;
         let mut f = std::fs::File::create("/tmp/got").unwrap();
         write!(f, "{}", got).unwrap();
-        panic!(r#"(diff "/tmp/got" "testfiles/want.txt")"#);
+        panic!(r#" (diff "/tmp/got" "summarize-bin/testfiles/want.txt") "#);
     }
 }
 

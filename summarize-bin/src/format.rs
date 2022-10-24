@@ -104,7 +104,7 @@ where
         let max_corrs = self.max_corrs();
         let nsum = self.len();
         // 4 for w/v label, 6 for each symmetry label, and 8 for each frequency
-        let dashes = Self::line(4 + 14 * nsum);
+        let dashes = Self::line(4 + 16 * nsum);
 
         writeln!(f, "{}", self.pre_table(TableType::Vib, 1 + 2 * nsum))?;
 
@@ -112,7 +112,7 @@ where
         for i in 0..nsum {
             write!(
                 f,
-                "{:>6}{}{:>8}{}",
+                "{:>8}{}{:>8}{}",
                 "Symm.",
                 Self::SEP,
                 "Freq.",
@@ -149,7 +149,7 @@ where
             writeln!(f)?;
         }
         writeln!(f, "{}", dashes)?;
-        write!(f, "ZPT{}", self.sep())?;
+        write!(f, " ZPT{}", self.sep())?;
         for (i, sum) in self.into_iter().enumerate() {
             write!(
                 f,
@@ -163,7 +163,7 @@ where
         writeln!(f)?;
 
         for i in 0..max_corrs {
-            write!(f, "{}{}", self.nu(i + 1), self.sep())?;
+            write!(f, " {}{}", self.nu(i + 1), self.sep())?;
             for (j, sum) in self.into_iter().enumerate() {
                 if let Some(v) = sum.corr.get(i) {
                     write!(
