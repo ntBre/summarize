@@ -3,11 +3,12 @@ use std::fmt::Display;
 use summarize::Summary;
 use symm::Irrep;
 
+#[allow(unused)]
 pub enum TableType {
-    #[allow(unused)]
     Vib,
-    #[allow(unused)]
     Rot,
+    DistA,
+    DistS,
 }
 
 pub trait Format
@@ -252,11 +253,101 @@ where
         Ok(())
     }
 
+    fn print_dist(
+        &self,
+        f: &mut std::fmt::Formatter,
+    ) -> Result<(), std::fmt::Error> {
+        let nsum = self.len();
+        writeln!(f, "{}", self.pre_table(TableType::DistA, 1 + nsum))?;
+        let dashes = Self::line(13 + 18 * nsum);
+
+        self.dist_header(nsum, f, &dashes)?;
+
+        let delta_labels = self.delta_labels();
+        write_dist_consts! {
+            f, self, deltas,
+            big_delta_j => delta_labels[0],
+            big_delta_k => delta_labels[1],
+            big_delta_jk => delta_labels[2],
+            delta_j => delta_labels[3],
+            delta_k => delta_labels[4],
+        }
+
+        writeln!(f, "{dashes}")?;
+
+        let phi_labels = self.phi_labels();
+        write_dist_consts! {
+            f, self, phis,
+            big_phi_j =>  phi_labels[0],
+            big_phi_k =>  phi_labels[1],
+            big_phi_jk =>  phi_labels[2],
+            big_phi_kj =>  phi_labels[3],
+            phi_j =>  phi_labels[4],
+            phi_jk =>  phi_labels[5],
+            phi_k =>  phi_labels[6],
+        }
+
+        writeln!(f, "{}", self.pre_table(TableType::DistS, 1 + nsum))?;
+        self.dist_header(nsum, f, &dashes)?;
+
+        write_dist_consts! {
+            f, self, deltas,
+            d_j => delta_labels[5],
+            d_jk => delta_labels[6],
+            d_k => delta_labels[7],
+            d1 => delta_labels[8],
+            d2 => delta_labels[9],
+        }
+
+        writeln!(f, "{dashes}")?;
+
+        write_dist_consts! {
+            f, self, phis,
+            h_j =>  phi_labels[7],
+            h_jk =>  phi_labels[8],
+            h_kj =>  phi_labels[9],
+            h_k =>  phi_labels[10],
+            h1 =>  phi_labels[11],
+            h2 =>  phi_labels[12],
+            h3 =>  phi_labels[13],
+        }
+
+        Ok(())
+    }
+
     fn rot_const(&self, c: &str, sub: impl Display) -> String;
 
     /// returns the labels for the quartic distortion constants (deltas) in the
     /// order DeltaJ, DeltaK, DeltaJK, deltaJ, deltaK, DJ, DJK, DK, d1, d2
     fn delta_labels(&self) -> [&'static str; 10];
+
+    /// returns the labels for the sextic distortion constants (phis) in the
+    /// order PhiJ, PhiK, PhiJK, PhiKJ, phiJ, phiJK, phiK, HJ, HJK, HKJ, HK, h1,
+    /// h2, h3
+    fn phi_labels(&self) -> [&'static str; 14];
+
+    fn dist_header(
+        &self,
+        nsum: usize,
+        f: &mut std::fmt::Formatter,
+        dashes: impl Display,
+    ) -> Result<(), std::fmt::Error> {
+        if nsum > 1 {
+            write!(f, "{:<13}{}", "Const.", self.sep())?;
+            for i in 0..nsum {
+                write!(
+                    f,
+                    r"{:>16} {}{}",
+                    "Mol.",
+                    i + 1,
+                    self.end(i < nsum - 1)
+                )
+                .unwrap();
+            }
+        }
+        writeln!(f, "\n{dashes}")?;
+        Ok(())
+    }
 }
 
 /// implement [std::fmt::Display] for a type that implements [Format]
@@ -269,50 +360,7 @@ macro_rules! impl_display {
 
 		// self.print_rots(f)?;
 
-		writeln!(f, "\nA-Reduced Quartic Distortion Constants (MHz):\n")?;
-		let labels = self.delta_labels();
-		write_dist_consts! {
-		    f, self, deltas,
-		    big_delta_j => labels[0],
-		    big_delta_k => labels[1],
-		    big_delta_jk => labels[2],
-		    delta_j => labels[3],
-		    delta_k => labels[4],
-		}
-
-		writeln!(f, "\nS-Reduced Quartic Distortion Constants (MHz):\n")?;
-		write_dist_consts! {
-		    f, self, deltas,
-		    d_j => labels[5],
-		    d_jk => labels[6],
-		    d_k => labels[7],
-		    d1 => labels[8],
-		    d2 => labels[9],
-		}
-
-		writeln!(f, "\nA-Reduced Sextic Distortion Constants (MHz):\n")?;
-		write_dist_consts! {
-		    f, self, phis,
-		    big_phi_j => "PHI J",
-		    big_phi_k => "PHI K",
-		    big_phi_jk => "PHI JK",
-		    big_phi_kj => "PHI KJ",
-		    phi_j => "phi j",
-		    phi_jk => "phi jk",
-		    phi_k => "phi k",
-		}
-
-		writeln!(f, "\nS-Reduced Sextic Distortion Constants (MHz):\n")?;
-		write_dist_consts! {
-		    f, self, phis,
-		    h_j => "H J",
-		    h_jk => "H JK",
-		    h_kj => "H KJ",
-		    h_k => "H K",
-		    h1 => "h 1",
-		    h2 => "h 2",
-		    h3 => "h 3",
-		}
+		self.print_dist(f)?;
 
 		writeln!(f, "\nCurvilinear Coordinates:\n")?;
 		for (i, sum) in self.into_iter().enumerate() {

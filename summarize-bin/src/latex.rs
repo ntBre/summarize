@@ -110,6 +110,27 @@ impl Format for Latex {
 \begin{{tabular}}{{{s}}}",
                 )
             }
+            TableType::DistA | TableType::DistS => {
+                let cap = format!(
+                    "Quartic and sextic distortion constants in the \
+				   Watson {}-reduced Hamiltonian (in MHz)",
+                    if matches!(typ, TableType::DistA) {
+                        "A"
+                    } else {
+                        "S"
+                    }
+                );
+                let mut s = String::from("l");
+                for _ in 0..cols {
+                    s.push('r');
+                }
+                format!(
+                    r"\begin{{table}}
+\centering
+\caption{{{cap}}}
+\begin{{tabular}}{{{s}}}",
+                )
+            }
         }
     }
 
@@ -134,6 +155,25 @@ impl Format for Latex {
             r"$D_{K}$",
             r"$d_{1}$",
             r"$d_{2}$",
+        ]
+    }
+
+    fn phi_labels(&self) -> [&'static str; 14] {
+        [
+            r"$\Phi_{J}",
+            r"$\Phi_{K}",
+            r"$\Phi_{JK}",
+            r"$\Phi_{KJ}",
+            r"$\phi_{j}",
+            r"$\phi_{jk}",
+            r"$\phi_{k}",
+            r"$H_{J}",
+            r"$H_{JK}",
+            r"$H_{KJ}",
+            r"$H_{K}",
+            r"$h_{1}",
+            r"$h_{2}",
+            r"$h_{3}",
         ]
     }
 }

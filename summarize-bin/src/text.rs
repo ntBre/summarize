@@ -41,6 +41,14 @@ impl Format for Text {
             TableType::Rot => {
                 String::from("\nRotational Constants (in MHz):\n")
             }
+            TableType::DistA => String::from(
+                "\nQuartic and Sextic Distortion \
+		 Constants in the Watson A-Reduced Hamiltonian (in MHz):\n",
+            ),
+            TableType::DistS => String::from(
+                "\nQuartic and Sextic Distortion \
+		 Constants in the Watson S-Reduced Hamiltonian (in MHz):\n",
+            ),
         }
     }
 
@@ -56,6 +64,13 @@ impl Format for Text {
         [
             "DELTA J", "DELTA K", "DELTA JK", "delta J", "delta K", "D J",
             "D JK", "D K", "d 1", "d 2",
+        ]
+    }
+
+    fn phi_labels(&self) -> [&'static str; 14] {
+        [
+            "PHI J", "PHI K", "PHI JK", "PHI KJ", "phi j", "phi jk", "phi k",
+            "H J", "H JK", "H KJ", "H K", "h 1", "h 2", "h 3",
         ]
     }
 }
