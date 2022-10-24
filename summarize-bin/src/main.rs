@@ -41,6 +41,9 @@ mod format;
 mod latex;
 mod text;
 
+#[cfg(test)]
+mod tests;
+
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
