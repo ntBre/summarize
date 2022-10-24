@@ -56,6 +56,43 @@ where
 
     fn post_table(&self) -> &'static str;
 
+    /// combine the constant `c` and the subscript `sub` into a single
+    /// rotational constant
+    fn rot_const(&self, c: &str, sub: impl Display) -> String;
+
+    /// returns the labels for the quartic distortion constants (deltas) in the
+    /// order DeltaJ, DeltaK, DeltaJK, deltaJ, deltaK, DJ, DJK, DK, d1, d2
+    fn delta_labels(&self) -> [&'static str; 10];
+
+    /// returns the labels for the sextic distortion constants (phis) in the
+    /// order PhiJ, PhiK, PhiJK, PhiKJ, phiJ, phiJK, phiK, HJ, HJK, HKJ, HK, h1,
+    /// h2, h3
+    fn phi_labels(&self) -> [&'static str; 14];
+
+    /// helper method for writing the header for the distortion constant tables
+    fn dist_header(
+        &self,
+        nsum: usize,
+        f: &mut std::fmt::Formatter,
+        dashes: impl Display,
+    ) -> Result<(), std::fmt::Error> {
+        if nsum > 1 {
+            write!(f, "{:<13}{}", "Const.", self.sep())?;
+            for i in 0..nsum {
+                write!(
+                    f,
+                    r"{:>16} {}{}",
+                    "Mol.",
+                    i + 1,
+                    self.end(i < nsum - 1)
+                )
+                .unwrap();
+            }
+        }
+        writeln!(f, "\n{dashes}")?;
+        Ok(())
+    }
+
     fn print_freqs(
         &self,
         f: &mut std::fmt::Formatter,
@@ -319,37 +356,100 @@ where
         Ok(())
     }
 
-    fn rot_const(&self, c: &str, sub: impl Display) -> String;
-
-    /// returns the labels for the quartic distortion constants (deltas) in the
-    /// order DeltaJ, DeltaK, DeltaJK, deltaJ, deltaK, DJ, DJK, DK, d1, d2
-    fn delta_labels(&self) -> [&'static str; 10];
-
-    /// returns the labels for the sextic distortion constants (phis) in the
-    /// order PhiJ, PhiK, PhiJK, PhiKJ, phiJ, phiJK, phiK, HJ, HJK, HKJ, HK, h1,
-    /// h2, h3
-    fn phi_labels(&self) -> [&'static str; 14];
-
-    fn dist_header(
+    fn print_curvils(
         &self,
-        nsum: usize,
         f: &mut std::fmt::Formatter,
-        dashes: impl Display,
     ) -> Result<(), std::fmt::Error> {
-        if nsum > 1 {
-            write!(f, "{:<13}{}", "Const.", self.sep())?;
-            for i in 0..nsum {
+        writeln!(f, "\nCurvilinear Coordinates:\n")?;
+        for (i, sum) in self.into_iter().enumerate() {
+            writeln!(f, "Molecule {}\n", i + 1)?;
+            writeln!(f, "{:^21}{:>18}{:>18}", "Coord", "R(EQUIL)", "R(ALPHA)")?;
+            let vals = sum.requil.iter().zip(&sum.ralpha);
+            for (curvil, (alpha, equil)) in sum.curvils.iter().zip(vals) {
+                use summarize::curvil::Curvil::*;
                 write!(
                     f,
-                    r"{:>16} {}{}",
-                    "Mol.",
-                    i + 1,
-                    self.end(i < nsum - 1)
-                )
-                .unwrap();
+                    "{:21}",
+                    match curvil {
+                        Bond(a, b) => format!(
+                            "r({:>2}{a:<2} - {:>2}{b:<2})",
+                            sum.geom.atoms[*a - 1].label(),
+                            sum.geom.atoms[*b - 1].label()
+                        ),
+                        Angle(a, b, c) => format!(
+                            "<({:>2}{a:<2} - {:>2}{b:<2} - {:>2}{c:<2})",
+                            sum.geom.atoms[*a - 1].label(),
+                            sum.geom.atoms[*b - 1].label(),
+                            sum.geom.atoms[*c - 1].label()
+                        ),
+                        // pretty sure nothing else is printed in this part
+                        Torsion(_, _, _, _) => todo!(),
+                    }
+                )?;
+                writeln!(f, "{:18.7}{:18.7}", equil, alpha)?;
             }
+            writeln!(f)?;
         }
-        writeln!(f, "\n{dashes}")?;
+
+        Ok(())
+    }
+
+    fn print_fermi(
+        &self,
+        f: &mut std::fmt::Formatter,
+    ) -> Result<(), std::fmt::Error> {
+        writeln!(f, "\nFermi Resonances:\n")?;
+        for (i, sum) in self.into_iter().enumerate() {
+            writeln!(f, "Molecule {}\n", i + 1)?;
+            let mut keys: Vec<_> = sum.fermi.keys().collect();
+            keys.sort_unstable();
+            for c in keys {
+                for (a, b) in &sum.fermi[c] {
+                    if a == b {
+                        write!(f, "2w{a} = ")?;
+                    } else {
+                        write!(f, "w{a} + w{b} = ")?;
+                    }
+                }
+                writeln!(f, "w{c}")?;
+            }
+            writeln!(f)?;
+        }
+
+        Ok(())
+    }
+
+    fn print_coriol(
+        &self,
+        f: &mut std::fmt::Formatter,
+    ) -> Result<(), std::fmt::Error> {
+        writeln!(f, "\nCoriolis Resonances:\n")?;
+        for (i, sum) in self.into_iter().enumerate() {
+            writeln!(f, "Molecule {}\n", i + 1)?;
+            writeln!(f, "{:>8}{:>8}", "Modes", "Axes")?;
+            let mut keys: Vec<_> = sum.coriolis.keys().collect();
+            keys.sort_unstable();
+            for c in keys {
+                let (a, b) = c;
+                // two spaces here and then max axes pads the rest of the room
+                write!(f, "w{a:<2} = w{b:<2}  ")?;
+                for axis in &sum.coriolis[c] {
+                    write!(
+                        f,
+                        "{:>2}",
+                        match axis {
+                            3 => "C",
+                            2 => "B",
+                            1 => "A",
+                            _ => "?",
+                        }
+                    )?;
+                }
+                writeln!(f)?;
+            }
+            writeln!(f)?;
+        }
+
         Ok(())
     }
 }
@@ -358,92 +458,18 @@ where
 #[macro_export]
 macro_rules! impl_display {
     ($t:ty) => {
-	impl ::std::fmt::Display for $t {
-	    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		// self.print_freqs(f)?;
+        impl ::std::fmt::Display for $t {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                // self.print_freqs(f)?;
+                // self.print_rots(f)?;
+                // self.print_dist(f)?;
 
-		// self.print_rots(f)?;
+                self.print_curvils(f)?;
+                self.print_fermi(f)?;
+                self.print_coriol(f)?;
 
-		self.print_dist(f)?;
-
-		writeln!(f, "\nCurvilinear Coordinates:\n")?;
-		for (i, sum) in self.into_iter().enumerate() {
-		    writeln!(f, "Molecule {}\n", i + 1)?;
-		    writeln!(f, "{:^21}{:>18}{:>18}", "Coord", "R(EQUIL)", "R(ALPHA)")?;
-		    let vals = sum.requil.iter().zip(&sum.ralpha);
-		    for (curvil, (alpha, equil)) in sum.curvils.iter().zip(vals) {
-			use summarize::curvil::Curvil::*;
-			write!(
-			    f,
-			    "{:21}",
-			    match curvil {
-				Bond(a, b) => format!(
-				    "r({:>2}{a:<2} - {:>2}{b:<2})",
-				    sum.geom.atoms[*a - 1].label(),
-				    sum.geom.atoms[*b - 1].label()
-				),
-				Angle(a, b, c) => format!(
-				    "<({:>2}{a:<2} - {:>2}{b:<2} - {:>2}{c:<2})",
-				    sum.geom.atoms[*a - 1].label(),
-				    sum.geom.atoms[*b - 1].label(),
-				    sum.geom.atoms[*c - 1].label()
-				),
-				// pretty sure nothing else is printed in this part
-				Torsion(_, _, _, _) => todo!(),
-			    }
-			)?;
-			writeln!(f, "{:18.7}{:18.7}", equil, alpha)?;
-		    }
-		    writeln!(f)?;
-		}
-
-		writeln!(f, "\nFermi Resonances:\n")?;
-		for (i, sum) in self.into_iter().enumerate() {
-		    writeln!(f, "Molecule {}\n", i + 1)?;
-		    let mut keys: Vec<_> = sum.fermi.keys().collect();
-		    keys.sort_unstable();
-		    for c in keys {
-			for (a, b) in &sum.fermi[c] {
-			    if a == b {
-				write!(f, "2w{a} = ")?;
-			    } else {
-				write!(f, "w{a} + w{b} = ")?;
-			    }
-			}
-			writeln!(f, "w{c}")?;
-		    }
-		    writeln!(f)?;
-		}
-
-		writeln!(f, "\nCoriolis Resonances:\n")?;
-		for (i, sum) in self.into_iter().enumerate() {
-		    writeln!(f, "Molecule {}\n", i + 1)?;
-		    writeln!(f, "{:>8}{:>8}", "Modes", "Axes")?;
-		    let mut keys: Vec<_> = sum.coriolis.keys().collect();
-		    keys.sort_unstable();
-		    for c in keys {
-			let (a, b) = c;
-			// two spaces here and then max axes pads the rest of the room
-			write!(f, "w{a:<2} = w{b:<2}  ")?;
-			for axis in &sum.coriolis[c] {
-			    write!(
-				f,
-				"{:>2}",
-				match axis {
-				    3 => "C",
-				    2 => "B",
-				    1 => "A",
-				    _ => "?",
-				}
-			    )?;
-			}
-			writeln!(f)?;
-		    }
-		    writeln!(f)?;
-		}
-
-		Ok(())
-	    }
-	}
+                Ok(())
+            }
+        }
     };
 }
