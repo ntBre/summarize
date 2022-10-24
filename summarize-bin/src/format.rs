@@ -103,11 +103,11 @@ where
             writeln!(f)?;
         }
         writeln!(f, "{}", dashes)?;
-        write!(f, "ZPT {}", self.sep())?;
+        write!(f, "ZPT{}", self.sep())?;
         for (i, sum) in self.into_iter().enumerate() {
             write!(
                 f,
-                "{:6}{}{:8.1}{}",
+                "{:8}{}{:8.1}{}",
                 "",
                 self.sep(),
                 sum.zpt,
@@ -122,7 +122,7 @@ where
                 if let Some(v) = sum.corr.get(i) {
                     write!(
                         f,
-                        "{:>6}{}{:8.1}{}",
+                        "{:>8}{}{:8.1}{}",
                         self.irrep(
                             sum.irreps.get(i).unwrap_or(&symm::Irrep::A),
                         ),
@@ -133,7 +133,7 @@ where
                 } else {
                     write!(
                         f,
-                        "{:6}{}{:8}{}",
+                        "{:8}{}{:8}{}",
                         "",
                         self.sep(),
                         "",

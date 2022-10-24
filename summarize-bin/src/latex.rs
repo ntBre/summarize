@@ -66,21 +66,37 @@ impl Format for Latex {
     }
 
     fn pre_table(&self, typ: TableType, cols: usize) -> String {
-        let (cap, fmt) = match typ {
+        let (cap, head, fmt) = match typ {
             TableType::Vib => {
                 // left align mode column followed
                 let mut s = String::from("l");
                 for _ in 0..cols / 2 {
                     s.push_str("lr");
                 }
-                ("Vibrational frequencies (in cm$^{-1}$)", s)
+                let head = if cols / 2 > 1 {
+                    use std::fmt::Write;
+                    let mut h = String::from("\n & ");
+                    for i in 0..cols / 2 {
+                        write!(
+                            h,
+                            r"\multicolumn{{2}}{{c}}{{Mol. {}}}{}",
+                            i + 1,
+                            self.end(i < cols / 2 - 1)
+                        )
+                        .unwrap();
+                    }
+                    h
+                } else {
+                    "".to_owned()
+                };
+                ("Vibrational frequencies (in cm$^{-1}$)", head, s)
             }
         };
         format!(
             r"\begin{{table}}
 \centering
 \caption{{{cap}}}
-\begin{{tabular}}{{{fmt}}}",
+\begin{{tabular}}{{{fmt}}}{head}",
         )
     }
 
