@@ -438,31 +438,38 @@ where
         &self,
         f: &mut std::fmt::Formatter,
     ) -> Result<(), std::fmt::Error> {
-        writeln!(f, "\nCoriolis Resonances:\n")?;
+        let dashes = Self::line(16);
         for (i, sum) in self.into_iter().enumerate() {
-            writeln!(f, "Molecule {}\n", i + 1)?;
-            writeln!(f, "{:>8}{:>8}", "Modes", "Axes")?;
+            writeln!(f, "{}", self.pre_table(TableType::Coriol, i))?;
+            writeln!(f, "{dashes}")?;
             let mut keys: Vec<_> = sum.coriolis.keys().collect();
             keys.sort_unstable();
             for c in keys {
                 let (a, b) = c;
                 // two spaces here and then max axes pads the rest of the room
-                write!(f, "w{a:<2} = w{b:<2}  ")?;
+                write!(
+                    f,
+                    "{} = {}  {}",
+                    self.omega(*a),
+                    self.omega(*b),
+                    self.sep()
+                )?;
                 for axis in &sum.coriolis[c] {
                     write!(
                         f,
-                        "{:>2}",
+                        "{:>2}{}",
                         match axis {
                             3 => "C",
                             2 => "B",
                             1 => "A",
                             _ => "?",
-                        }
+                        },
+                        self.end(false),
                     )?;
                 }
                 writeln!(f)?;
             }
-            writeln!(f)?;
+            writeln!(f, "{}\n", self.post_table())?;
         }
 
         Ok(())
@@ -480,7 +487,7 @@ macro_rules! impl_display {
                 // self.print_dist(f)?;
 
                 // self.print_curvils(f)?;
-                self.print_fermi(f)?;
+                // self.print_fermi(f)?;
                 self.print_coriol(f)?;
 
                 Ok(())

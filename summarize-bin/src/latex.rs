@@ -152,7 +152,17 @@ impl Format for Latex {
 \begin{{tabular}}{{l}}",
                 )
             }
-            TableType::Coriol => todo!(),
+            TableType::Coriol => {
+                let cap = format!(r"Coriolis resonances for Mol. {}", cols + 1);
+                format!(
+                    r"\begin{{table}}
+\centering
+\caption{{{cap}}}
+\begin{{tabular}}{{lr}}
+{:>8} & {:>8} \\",
+                    "Modes", "Axes"
+                )
+            }
         }
     }
 

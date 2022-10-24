@@ -59,7 +59,16 @@ impl Format for Text {
             TableType::Fermi => {
                 format!("Fermi resonances for for Mol. {}:\n", n + 1)
             }
-            TableType::Coriol => todo!(),
+            TableType::Coriol => {
+                format!(
+                    "Coriolis resonances for for Mol. {}:
+
+{:>8}{:>8}",
+                    n + 1,
+                    "Modes",
+                    "Axes",
+                )
+            }
         }
     }
 
