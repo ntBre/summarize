@@ -51,6 +51,13 @@ impl Format for Text {
     fn rot_const(&self, c: &str, sub: impl std::fmt::Display) -> String {
         format!("{}{:<5}{}", c, sub, self.sep())
     }
+
+    fn delta_labels(&self) -> [&'static str; 10] {
+        [
+            "DELTA J", "DELTA K", "DELTA JK", "delta J", "delta K", "D J",
+            "D JK", "D K", "d 1", "d 2",
+        ]
+    }
 }
 
 impl<'a> IntoIterator for &'a Text {

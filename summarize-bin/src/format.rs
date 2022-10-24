@@ -6,6 +6,7 @@ use symm::Irrep;
 pub enum TableType {
     #[allow(unused)]
     Vib,
+    #[allow(unused)]
     Rot,
 }
 
@@ -252,6 +253,10 @@ where
     }
 
     fn rot_const(&self, c: &str, sub: impl Display) -> String;
+
+    /// returns the labels for the quartic distortion constants (deltas) in the
+    /// order DeltaJ, DeltaK, DeltaJK, deltaJ, deltaK, DJ, DJK, DK, d1, d2
+    fn delta_labels(&self) -> [&'static str; 10];
 }
 
 /// implement [std::fmt::Display] for a type that implements [Format]
@@ -262,26 +267,27 @@ macro_rules! impl_display {
 	    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		// self.print_freqs(f)?;
 
-		self.print_rots(f)?;
+		// self.print_rots(f)?;
 
 		writeln!(f, "\nA-Reduced Quartic Distortion Constants (MHz):\n")?;
+		let labels = self.delta_labels();
 		write_dist_consts! {
 		    f, self, deltas,
-		    big_delta_j => "DELTA J",
-		    big_delta_k => "DELTA K",
-		    big_delta_jk => "DELTA JK",
-		    delta_j => "delta J",
-		    delta_k => "delta K",
+		    big_delta_j => labels[0],
+		    big_delta_k => labels[1],
+		    big_delta_jk => labels[2],
+		    delta_j => labels[3],
+		    delta_k => labels[4],
 		}
 
 		writeln!(f, "\nS-Reduced Quartic Distortion Constants (MHz):\n")?;
 		write_dist_consts! {
 		    f, self, deltas,
-		    d_j => "D J",
-		    d_jk => "D JK",
-		    d_k => "D K",
-		    d1 => "d 1",
-		    d2 => "d 2",
+		    d_j => labels[5],
+		    d_jk => labels[6],
+		    d_k => labels[7],
+		    d1 => labels[8],
+		    d2 => labels[9],
 		}
 
 		writeln!(f, "\nA-Reduced Sextic Distortion Constants (MHz):\n")?;

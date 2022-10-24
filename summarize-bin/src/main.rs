@@ -22,13 +22,15 @@ macro_rules! write_dist_consts {
     ($w:ident, $iter: expr, $struct:ident,
      $($field:ident => $name:expr$(,)?),*) => {
 	$(
-	    write!($w, "{:<8}", $name)?;
-	    for sum in $iter {
+	    write!($w, "{:<13}{}", $name, $iter.sep())?;
+	    let nsum = $iter.len();
+	    for (i, sum) in $iter.into_iter().enumerate() {
 		if let Some(d) = sum.$struct.$field {
 		    write!($w, "{:18.10}", d)?;
 		} else {
 		    write!($w, "{:18.10}", "")?;
 		}
+		write!($w, "{}", $iter.end(i < nsum-1))?;
 	    }
 	    writeln!($w)?;
 	)*

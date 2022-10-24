@@ -121,6 +121,21 @@ impl Format for Latex {
     fn rot_const(&self, c: &str, sub: impl std::fmt::Display) -> String {
         format!("${}_{{{:<5}}}${}", c, sub, self.sep())
     }
+
+    fn delta_labels(&self) -> [&'static str; 10] {
+        [
+            r"$\Delta_{J}$",
+            r"$\Delta_{K}$",
+            r"$\Delta_{JK}$",
+            r"$\delta_{J}",
+            r"$\delta_{K}",
+            r"$D_{J}$",
+            r"$D_{JK}$",
+            r"$D_{K}$",
+            r"$d_{1}$",
+            r"$d_{2}$",
+        ]
+    }
 }
 
 impl<'a> IntoIterator for &'a Latex {

@@ -21,7 +21,7 @@ macro_rules! write_dist_consts {
     ($w:ident, $struct:ident, $($field:ident => $name:expr$(,)?),*) => {
 	$(
 	    if let Some(d) = $struct.$field {
-		write!($w, "{:<8}{:18.10}", $name, d)?;
+		write!($w, "{:<13}{:18.10}", $name, d)?;
 	    }
 	)*
     };
