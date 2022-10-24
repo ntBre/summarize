@@ -35,6 +35,7 @@ macro_rules! write_dist_consts {
     };
 }
 
+mod format;
 mod text;
 
 /// Simple program to greet a person
