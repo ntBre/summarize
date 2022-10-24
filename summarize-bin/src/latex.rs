@@ -143,6 +143,16 @@ impl Format for Latex {
 \begin{{tabular}}{{lrr}}",
                 )
             }
+            TableType::Fermi => {
+                let cap = format!(r"Fermi resonances for Mol. {}", cols + 1,);
+                format!(
+                    r"\begin{{table}}
+\centering
+\caption{{{cap}}}
+\begin{{tabular}}{{l}}",
+                )
+            }
+            TableType::Coriol => todo!(),
         }
     }
 

@@ -10,6 +10,8 @@ pub enum TableType {
     DistA,
     DistS,
     Curvil,
+    Fermi,
+    Coriol,
 }
 
 pub trait Format
@@ -407,22 +409,26 @@ where
         &self,
         f: &mut std::fmt::Formatter,
     ) -> Result<(), std::fmt::Error> {
-        writeln!(f, "\nFermi Resonances:\n")?;
         for (i, sum) in self.into_iter().enumerate() {
-            writeln!(f, "Molecule {}\n", i + 1)?;
+            writeln!(f, "{}", self.pre_table(TableType::Fermi, i))?;
             let mut keys: Vec<_> = sum.fermi.keys().collect();
             keys.sort_unstable();
             for c in keys {
                 for (a, b) in &sum.fermi[c] {
                     if a == b {
-                        write!(f, "2w{a} = ")?;
+                        write!(f, "2{} = ", self.omega(*a))?;
                     } else {
-                        write!(f, "w{a} + w{b} = ")?;
+                        write!(
+                            f,
+                            "{} + {} = ",
+                            self.omega(*a),
+                            self.omega(*b)
+                        )?;
                     }
                 }
-                writeln!(f, "w{c}")?;
+                writeln!(f, "{}{}", self.omega(*c), self.end(false))?;
             }
-            writeln!(f)?;
+            writeln!(f, "{}\n", self.post_table())?;
         }
 
         Ok(())
@@ -473,7 +479,7 @@ macro_rules! impl_display {
                 // self.print_rots(f)?;
                 // self.print_dist(f)?;
 
-                self.print_curvils(f)?;
+                // self.print_curvils(f)?;
                 self.print_fermi(f)?;
                 self.print_coriol(f)?;
 

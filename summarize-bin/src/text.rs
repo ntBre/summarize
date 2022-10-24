@@ -28,11 +28,11 @@ impl Format for Text {
     }
 
     fn omega(&self, idx: usize) -> String {
-        format!(" w{:<2}", idx)
+        format!("w{:<2}", idx)
     }
 
     fn nu(&self, idx: usize) -> String {
-        format!(" v{:<2}", idx)
+        format!("v{:<2}", idx)
     }
 
     fn pre_table(&self, typ: TableType, n: usize) -> String {
@@ -56,6 +56,10 @@ impl Format for Text {
                     n + 1
                 )
             }
+            TableType::Fermi => {
+                format!("Fermi resonances for for Mol. {}:\n", n + 1)
+            }
+            TableType::Coriol => todo!(),
         }
     }
 
