@@ -66,7 +66,7 @@ impl Format for Latex {
     }
 
     fn pre_table(&self, typ: TableType, cols: usize) -> String {
-        let (cap, head, fmt) = match typ {
+        match typ {
             TableType::Vib => {
                 // left align mode column followed
                 let mut s = String::from("l");
@@ -89,20 +89,37 @@ impl Format for Latex {
                 } else {
                     "".to_owned()
                 };
-                ("Vibrational frequencies (in cm$^{-1}$)", head, s)
-            }
-        };
-        format!(
-            r"\begin{{table}}
+                let cap = "Vibrational frequencies (in cm$^{-1}$)";
+                format!(
+                    r"\begin{{table}}
 \centering
 \caption{{{cap}}}
-\begin{{tabular}}{{{fmt}}}{head}",
-        )
+\begin{{tabular}}{{{s}}}{head}",
+                )
+            }
+            TableType::Rot => {
+                let mut s = String::from("l");
+                for _ in 0..cols {
+                    s.push('r');
+                }
+                let cap = "Rotational Constants (in MHz)";
+                format!(
+                    r"\begin{{table}}
+\centering
+\caption{{{cap}}}
+\begin{{tabular}}{{{s}}}",
+                )
+            }
+        }
     }
 
     fn post_table(&self) -> &'static str {
         r"\end{tabular}
 \end{table}"
+    }
+
+    fn rot_const(&self, c: &str, sub: impl std::fmt::Display) -> String {
+        format!("${}_{{{:<5}}}${}", c, sub, self.sep())
     }
 }
 

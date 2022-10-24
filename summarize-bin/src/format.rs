@@ -1,8 +1,12 @@
+use std::fmt::Display;
+
 use summarize::Summary;
 use symm::Irrep;
 
 pub enum TableType {
+    #[allow(unused)]
     Vib,
+    Rot,
 }
 
 pub trait Format
@@ -152,14 +156,42 @@ where
         &self,
         f: &mut std::fmt::Formatter,
     ) -> Result<(), std::fmt::Error> {
+        let nsum = self.len();
+        write!(f, "{}", self.pre_table(TableType::Rot, 1 + nsum))?;
+        if nsum > 1 {
+            write!(f, "\nConst.{}", self.sep())?;
+            for i in 0..nsum {
+                write!(
+                    f,
+                    r"{:>14}{}{}",
+                    "Mol. ",
+                    i + 1,
+                    self.end(i < nsum - 1)
+                )
+                .unwrap();
+            }
+        }
+        writeln!(f)?;
+
+        const WIDTH: usize = 15;
+        const PREC: usize = 1;
+
+        let dashes = Self::line(6 + WIDTH * nsum);
+        writeln!(f, "{dashes}")?;
+
         // equilibrium
         for j in 0..3 {
-            write!(f, "{}e ", ["A", "B", "C"][j])?;
-            for sum in self {
+            write!(f, "{}", self.rot_const(["A", "B", "C"][j], "e"))?;
+            for (i, sum) in self.into_iter().enumerate() {
                 if let Some(rot) = sum.rot_equil.get(j) {
-                    write!(f, "{:15.7}", rot)?;
+                    write!(
+                        f,
+                        "{:WIDTH$.PREC$}{}",
+                        rot,
+                        self.end(i < nsum - 1)
+                    )?;
                 } else {
-                    write!(f, "{:15}", "")?;
+                    write!(f, "{:WIDTH$}{}", "", self.end(i < nsum - 1))?;
                 }
             }
             writeln!(f)?;
@@ -168,16 +200,31 @@ where
         for i in 0..self.max_rots() {
             // loop over a, b, and c
             for j in 0..3 {
-                write!(f, "{}{:<2}", ["A", "B", "C"][j], i)?;
-                for sum in self {
+                write!(f, "{}", self.rot_const(["A", "B", "C"][j], i))?;
+                for (k, sum) in self.into_iter().enumerate() {
                     if let Some(rot) = sum.rots.get(i) {
                         if let Some(abc) = rot.get(j) {
-                            write!(f, "{:15.7}", abc)?;
+                            write!(
+                                f,
+                                "{:WIDTH$.PREC$}{}",
+                                abc,
+                                self.end(k < nsum - 1)
+                            )?;
                         } else {
-                            write!(f, "{:15}", "")?;
+                            write!(
+                                f,
+                                "{:WIDTH$.PREC$}{}",
+                                "",
+                                self.end(k < nsum - 1)
+                            )?;
                         }
                     } else {
-                        write!(f, "{:15}", "")?;
+                        write!(
+                            f,
+                            "{:WIDTH$.PREC$}{}",
+                            "",
+                            self.end(k < nsum - 1)
+                        )?;
                     }
                 }
                 writeln!(f)?;
@@ -185,21 +232,26 @@ where
         }
 
         // this is kappa for the vibrationally-averaged rotational constants
-        write!(f, "k  ")?;
-        for sum in self {
+        write!(f, "{:<6}{}", "k", self.sep())?;
+        for (i, sum) in self.into_iter().enumerate() {
             if sum.rot_equil.len() == 3 {
                 let r = &sum.rots[0];
                 let (a, b, c) = (r[0], r[1], r[2]);
                 let k = (2.0 * b - a - c) / (a - c);
-                write!(f, "{:15.7}", k)?;
+                write!(f, "{:WIDTH$.7}", k)?;
             } else {
-                write!(f, "{:15.7}", "")?;
+                write!(f, "{:WIDTH$.7}", "")?;
             }
+            write!(f, "{}", self.end(i < nsum - 1))?;
         }
         writeln!(f)?;
 
+        writeln!(f, "{}", self.post_table())?;
+
         Ok(())
     }
+
+    fn rot_const(&self, c: &str, sub: impl Display) -> String;
 }
 
 /// implement [std::fmt::Display] for a type that implements [Format]
@@ -208,9 +260,8 @@ macro_rules! impl_display {
     ($t:ty) => {
 	impl ::std::fmt::Display for $t {
 	    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		self.print_freqs(f)?;
+		// self.print_freqs(f)?;
 
-		writeln!(f, "\nRotational Constants (cm-1):\n")?;
 		self.print_rots(f)?;
 
 		writeln!(f, "\nA-Reduced Quartic Distortion Constants (MHz):\n")?;

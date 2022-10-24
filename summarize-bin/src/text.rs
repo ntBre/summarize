@@ -38,11 +38,18 @@ impl Format for Text {
     fn pre_table(&self, typ: TableType, _: usize) -> String {
         match typ {
             TableType::Vib => String::from("Vibrational Frequencies (cm-1):\n"),
+            TableType::Rot => {
+                String::from("\nRotational Constants (in MHz):\n")
+            }
         }
     }
 
     fn post_table(&self) -> &'static str {
         ""
+    }
+
+    fn rot_const(&self, c: &str, sub: impl std::fmt::Display) -> String {
+        format!("{}{:<5}{}", c, sub, self.sep())
     }
 }
 

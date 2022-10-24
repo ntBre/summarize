@@ -48,6 +48,8 @@ const ROTRANS_THRSH: f64 = 30.0;
 /// threshold for computing irrep symmetries
 const SYMM_EPS: f64 = 1e-4;
 
+const TO_MHZ: f64 = 29979.2458;
+
 lazy_static! {
     /// default weights used in SPECTRO
     static ref ATOMIC_WEIGHTS: HashMap<&'static str, usize> = HashMap::from([
@@ -341,7 +343,7 @@ impl Summary {
                 }
                 let mut v: Vec<_> = fields
                     .iter()
-                    .map(|s| s.parse().unwrap_or(BAD_FLOAT))
+                    .map(|s| s.parse().unwrap_or(BAD_FLOAT) * TO_MHZ)
                     .collect();
                 v.sort_by(|a, b| b.partial_cmp(a).unwrap());
                 ret.rots.push(v);
@@ -351,8 +353,9 @@ impl Summary {
                     line.split_ascii_whitespace()
                         .nth(2)
                         .unwrap()
-                        .parse()
-                        .unwrap(),
+                        .parse::<f64>()
+                        .unwrap()
+                        * TO_MHZ,
                 );
             } else if DELTA.is_match(&line) {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
