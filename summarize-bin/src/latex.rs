@@ -1,4 +1,4 @@
-use summarize::Summary;
+use summarize::{curvil::Curvil, Summary};
 
 use crate::{
     format::{Format, TableType},
@@ -131,6 +131,18 @@ impl Format for Latex {
 \begin{{tabular}}{{{s}}}",
                 )
             }
+            TableType::Curvil => {
+                let cap = format!(
+                    r"Curvilinear coordinates for Mol. {} (in \AA{{}} or $^\circ$)",
+                    cols + 1,
+                );
+                format!(
+                    r"\begin{{table}}
+\centering
+\caption{{{cap}}}
+\begin{{tabular}}{{lrr}}",
+                )
+            }
         }
     }
 
@@ -175,6 +187,28 @@ impl Format for Latex {
             r"$h_{2}$",
             r"$h_{3}$",
         ]
+    }
+
+    fn curvil_label(&self, curvil: &Curvil, i: usize) -> String {
+        use Curvil::*;
+        let sum = &self.0[i];
+        match curvil {
+            Bond(a, b) => format!(
+                "$r(\\text{{{:>2}}}_{{{a:<2}}} - \\text{{{:>2}}}_{{{b:<2}}})$",
+                sum.geom.atoms[*a - 1].label(),
+                sum.geom.atoms[*b - 1].label()
+            ),
+            Angle(a, b, c) => format!(
+                // "<({:>2}{a:<2} - {:>2}{b:<2} - {:>2}{c:<2})",
+                "$\\angle(\\text{{{:>2}}}_{{{a:<2}}} - \
+		 \\text{{{:>2}}}_{{{b:<2}}} - \\text{{{:>2}}}_{{{c:<2}}})$",
+                sum.geom.atoms[*a - 1].label(),
+                sum.geom.atoms[*b - 1].label(),
+                sum.geom.atoms[*c - 1].label()
+            ),
+            // pretty sure nothing else is printed in this part
+            Torsion(_, _, _, _) => todo!(),
+        }
     }
 }
 

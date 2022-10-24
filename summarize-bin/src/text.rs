@@ -1,4 +1,4 @@
-use summarize::Summary;
+use summarize::{curvil::Curvil, Summary};
 
 use crate::{
     format::{Format, TableType},
@@ -35,7 +35,7 @@ impl Format for Text {
         format!(" v{:<2}", idx)
     }
 
-    fn pre_table(&self, typ: TableType, _: usize) -> String {
+    fn pre_table(&self, typ: TableType, n: usize) -> String {
         match typ {
             TableType::Vib => String::from("Vibrational Frequencies (cm-1):\n"),
             TableType::Rot => {
@@ -49,6 +49,13 @@ impl Format for Text {
                 "\nQuartic and Sextic Distortion \
 		 Constants in the Watson S-Reduced Hamiltonian (in MHz):\n",
             ),
+            TableType::Curvil => {
+                format!(
+                    "Equilibrium and Vibrationally Averaged Curvilinear \
+		     Coordinates for Mol. {} (in Å or °):\n",
+                    n + 1
+                )
+            }
         }
     }
 
@@ -72,6 +79,26 @@ impl Format for Text {
             "PHI J", "PHI K", "PHI JK", "PHI KJ", "phi j", "phi jk", "phi k",
             "H J", "H JK", "H KJ", "H K", "h 1", "h 2", "h 3",
         ]
+    }
+
+    fn curvil_label(&self, curvil: &Curvil, i: usize) -> String {
+        use Curvil::*;
+        let sum = &self.0[i];
+        match curvil {
+            Bond(a, b) => format!(
+                "r({:>2}{a:<2} - {:>2}{b:<2})",
+                sum.geom.atoms[*a - 1].label(),
+                sum.geom.atoms[*b - 1].label()
+            ),
+            Angle(a, b, c) => format!(
+                "<({:>2}{a:<2} - {:>2}{b:<2} - {:>2}{c:<2})",
+                sum.geom.atoms[*a - 1].label(),
+                sum.geom.atoms[*b - 1].label(),
+                sum.geom.atoms[*c - 1].label()
+            ),
+            // pretty sure nothing else is printed in this part
+            Torsion(_, _, _, _) => todo!(),
+        }
     }
 }
 

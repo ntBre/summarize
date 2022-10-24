@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use summarize::Summary;
+use summarize::{curvil::Curvil, Summary};
 use symm::Irrep;
 
 #[allow(unused)]
@@ -9,6 +9,7 @@ pub enum TableType {
     Rot,
     DistA,
     DistS,
+    Curvil,
 }
 
 pub trait Format
@@ -356,39 +357,47 @@ where
         Ok(())
     }
 
+    fn curvil_label(&self, curvil: &Curvil, i: usize) -> String;
+
     fn print_curvils(
         &self,
         f: &mut std::fmt::Formatter,
     ) -> Result<(), std::fmt::Error> {
-        writeln!(f, "\nCurvilinear Coordinates:\n")?;
+        const FIRST: usize = 21;
+        const AFTER: usize = 18;
+        const PREC: usize = 7;
+        let dashes = Self::line(FIRST + AFTER * 2);
         for (i, sum) in self.into_iter().enumerate() {
-            writeln!(f, "Molecule {}\n", i + 1)?;
-            writeln!(f, "{:^21}{:>18}{:>18}", "Coord", "R(EQUIL)", "R(ALPHA)")?;
+            writeln!(f, "{}", self.pre_table(TableType::Curvil, i))?;
+            writeln!(
+                f,
+                "{:^FIRST$}{}{:>AFTER$}{}{:>AFTER$}{}",
+                "Coord.",
+                self.sep(),
+                "Equil.",
+                self.sep(),
+                "Vib. Avg.",
+                self.end(false)
+            )?;
+            writeln!(f, "{dashes}")?;
             let vals = sum.requil.iter().zip(&sum.ralpha);
             for (curvil, (alpha, equil)) in sum.curvils.iter().zip(vals) {
-                use summarize::curvil::Curvil::*;
                 write!(
                     f,
-                    "{:21}",
-                    match curvil {
-                        Bond(a, b) => format!(
-                            "r({:>2}{a:<2} - {:>2}{b:<2})",
-                            sum.geom.atoms[*a - 1].label(),
-                            sum.geom.atoms[*b - 1].label()
-                        ),
-                        Angle(a, b, c) => format!(
-                            "<({:>2}{a:<2} - {:>2}{b:<2} - {:>2}{c:<2})",
-                            sum.geom.atoms[*a - 1].label(),
-                            sum.geom.atoms[*b - 1].label(),
-                            sum.geom.atoms[*c - 1].label()
-                        ),
-                        // pretty sure nothing else is printed in this part
-                        Torsion(_, _, _, _) => todo!(),
-                    }
+                    "{:FIRST$}{}",
+                    self.curvil_label(curvil, i),
+                    self.sep()
                 )?;
-                writeln!(f, "{:18.7}{:18.7}", equil, alpha)?;
+                writeln!(
+                    f,
+                    "{:AFTER$.PREC$}{}{:AFTER$.PREC$}{}",
+                    equil,
+                    self.sep(),
+                    alpha,
+                    self.end(false)
+                )?;
             }
-            writeln!(f)?;
+            writeln!(f, "{}\n", self.post_table())?;
         }
 
         Ok(())

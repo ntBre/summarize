@@ -101,6 +101,9 @@ fn main() {
         println!(
             r"\documentclass{{article}}
 
+% for text inside math
+\usepackage{{amsmath}}
+
 \begin{{document}}
 
 {}
