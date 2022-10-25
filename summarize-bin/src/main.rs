@@ -91,12 +91,16 @@ mod tests;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// only print the vibrational frequency summary
-    #[arg(short, long)]
+    #[arg(short, long, exclusive = true)]
     vib: bool,
 
     /// print the output in LaTeX format
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with_all = ["json"])]
     tex: bool,
+
+    /// print the output in JSON format
+    #[arg(short, long, conflicts_with_all = ["tex"])]
+    json: bool,
 
     infiles: Vec<String>,
 }
@@ -136,7 +140,7 @@ fn main() {
     let args = Args::parse();
     if args.infiles.is_empty() {
         eprintln!("usage: summarize FILENAME...");
-	return;
+        return;
     }
 
     let summaries: Vec<_> = args.infiles.iter().map(Summary::new).collect();
@@ -161,6 +165,8 @@ fn main() {
 ",
             summaries
         );
+    } else if args.json {
+        println!("\n{}", serde_json::to_string_pretty(&summaries[0]).unwrap());
     } else {
         println!("\n{}", Text(summaries));
     }

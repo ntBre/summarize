@@ -454,7 +454,7 @@ where
         for (i, sum) in self.into_iter().enumerate() {
             writeln!(f, "{}", self.pre_table(TableType::Coriol, i))?;
             writeln!(f, "{dashes}")?;
-            let mut keys: Vec<_> = sum.coriolis.keys().collect();
+            let mut keys: Vec<_> = sum.coriolis.data.keys().collect();
             keys.sort_unstable();
             for c in keys {
                 let (a, b) = c;
@@ -466,7 +466,7 @@ where
                     self.omega(*b),
                     self.sep()
                 )?;
-                for axis in &sum.coriolis[c] {
+                for axis in &sum.coriolis.data[c] {
                     write!(
                         f,
                         "{:>2}{}",

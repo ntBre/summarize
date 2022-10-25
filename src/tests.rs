@@ -75,6 +75,13 @@ H                  1.5951933      0.9069249      0.0000000
             vec![1.0697371, 0.5566012, 1.1595315],
         ],
         rot_equil: vec![1.17123, 1.07585, 0.56076],
+        deltas: todo!(),
+        phis: todo!(),
+        fermi: todo!(),
+        coriolis: todo!(),
+        curvils: todo!(),
+        ralpha: todo!(),
+        requil: todo!(),
     };
     check!(got, want);
 }
@@ -125,6 +132,13 @@ fn c2h4() {
             vec![0.9821289, 0.8232440, 4.8995346],
         ],
         rot_equil: vec![4.90200, 1.00466, 0.83378],
+        deltas: todo!(),
+        phis: todo!(),
+        fermi: todo!(),
+        coriolis: todo!(),
+        curvils: todo!(),
+        ralpha: todo!(),
+        requil: todo!(),
     };
     check!(got, want);
 }
@@ -150,6 +164,13 @@ fn degmode() {
         lxm: load_mat("testfiles/degmode.lxm"),
         rots: vec![],
         rot_equil: vec![1.19800],
+        deltas: todo!(),
+        phis: todo!(),
+        fermi: todo!(),
+        coriolis: todo!(),
+        curvils: todo!(),
+        ralpha: todo!(),
+        requil: todo!(),
     };
     check!(got, want);
 }
@@ -215,6 +236,13 @@ H    2.1461889     -0.2660770      0.0000000
         ],
         zpt: 14773.0842,
         rot_equil: vec![1.64769, 0.37160, 0.30322],
+        deltas: todo!(),
+        phis: todo!(),
+        fermi: todo!(),
+        coriolis: todo!(),
+        curvils: todo!(),
+        ralpha: todo!(),
+        requil: todo!(),
     };
     check!(got, want);
 }
@@ -263,8 +291,15 @@ H   -1.3465409      1.3195405      0.0000000
             vec![0.9887175, 0.3612145, 1.0334698],
             vec![0.9857452, 0.4927646, 0.9042860],
         ],
-        zpt: 8904.3886,
         rot_equil: vec![0.98880, 0.98880, 0.49440],
+        deltas: todo!(),
+        phis: todo!(),
+        fermi: todo!(),
+        coriolis: todo!(),
+        zpt: 8904.3886,
+        curvils: todo!(),
+        ralpha: todo!(),
+        requil: todo!(),
     };
     check!(got, want);
 }

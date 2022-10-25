@@ -12,6 +12,7 @@ use delta::Delta;
 use lazy_static::lazy_static;
 use phi::Phi;
 use regex::Regex;
+use serde::Serialize;
 use symm::{Atom, Irrep, Molecule};
 
 #[cfg(test)]
@@ -31,8 +32,10 @@ mod delta;
 mod phi;
 
 pub mod curvil {
+    use serde::Serialize;
+
     /// represented only by the indices into the geometry
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Serialize)]
     pub enum Curvil {
         Bond(usize, usize),
         Angle(usize, usize, usize),
@@ -86,7 +89,7 @@ lazy_static! {
     static ref CURVIL: Regex = Regex::new(r"^ CURVILINEAR INTERNAL COORDINATES").unwrap();
 }
 
-#[derive(Default, Debug, PartialEq)]
+#[derive(Default, Debug, PartialEq, Serialize)]
 pub struct Summary {
     /// harmonic vibrational frequencies
     pub harm: Vec<f64>,
@@ -127,7 +130,7 @@ pub struct Summary {
     pub fermi: HashMap<usize, Vec<(usize, usize)>>,
 
     /// inputed coriolis resonances. map of modes to axes
-    pub coriolis: HashMap<(usize, usize), Vec<usize>>,
+    pub coriolis: coriolis::Coriol,
 
     /// zero-point vibrational energy
     pub zpt: f64,
@@ -140,6 +143,37 @@ pub struct Summary {
 
     /// R(EQUIL) values of the curvilinear coordinates in `curvil`
     pub requil: Vec<f64>,
+}
+
+mod coriolis {
+    use std::collections::HashMap;
+
+    use serde::{ser::SerializeStruct, Serialize};
+
+    #[derive(Default, Debug, PartialEq)]
+    pub struct Coriol {
+        pub data: HashMap<(usize, usize), Vec<usize>>,
+    }
+
+    impl Serialize for Coriol {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            let mut s = serializer.serialize_struct("Coriol", 2)?;
+            let mut modes = Vec::new();
+            let mut axes = Vec::new();
+            let mut keys: Vec<_> = self.data.keys().collect();
+            keys.sort();
+            for key in keys {
+                modes.push(key);
+                axes.push(self.data[key].clone());
+            }
+            s.serialize_field("modes", &modes)?;
+            s.serialize_field("axes", &axes)?;
+            s.end()
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -432,7 +466,7 @@ impl Summary {
                 let a = v.next().unwrap().parse::<usize>().unwrap();
                 let b = v.next().unwrap().parse::<usize>().unwrap();
                 let axis = v.next().unwrap().parse::<usize>().unwrap();
-                let e = ret.coriolis.entry((a, b)).or_default();
+                let e = ret.coriolis.data.entry((a, b)).or_default();
                 e.push(axis);
             } else if state.is_coords() && BLANK.is_match(&line) {
                 state = State::None;

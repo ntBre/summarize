@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
-#[derive(Debug, Default, PartialEq)]
+use serde::Serialize;
+
+#[derive(Debug, Default, PartialEq, Serialize)]
 pub struct Phi {
     // a reduction
     pub big_phi_j: Option<f64>,
