@@ -3,8 +3,6 @@ use std::fmt::Display;
 use summarize::{curvil::Curvil, Summary};
 use symm::Irrep;
 
-use crate::Unit;
-
 #[allow(unused)]
 pub enum TableType {
     Vib,
@@ -21,10 +19,10 @@ where
     for<'a> &'a Self: IntoIterator<Item = &'a Summary>,
 {
     /// separator between fields in a table
-    const SEP: &'static str;
+    const SEP: &'static str = "";
 
     /// end of row delimiter
-    const END: &'static str;
+    const END: &'static str = "";
 
     fn max_harms(&self) -> usize;
     fn max_corrs(&self) -> usize;
@@ -32,10 +30,14 @@ where
     fn len(&self) -> usize;
 
     /// return the label for the harmonic frequencies. idx starts at 1
-    fn omega(&self, idx: usize) -> String;
+    fn omega(&self, idx: usize) -> String {
+        format!("w{:<2}", idx)
+    }
 
     /// return the label for the anharmonic frequencies. idx starts at 1
-    fn nu(&self, idx: usize) -> String;
+    fn nu(&self, idx: usize) -> String {
+        format!("v{:<2}", idx)
+    }
 
     /// return the desired format for an irrep
     fn irrep(&self, ir: &Irrep) -> String {
@@ -57,22 +59,73 @@ where
     /// function for including horizontal lines in the output
     fn line(width: usize) -> String;
 
-    fn pre_table(&self, typ: TableType, cols: usize) -> String;
+    /// called before each table
+    fn pre_table(&self, typ: TableType, n: usize) -> String {
+        match typ {
+            TableType::Vib => String::from("Vibrational Frequencies (cm-1):\n"),
+            TableType::Rot => {
+                String::from("\nRotational Constants (in MHz):\n")
+            }
+            TableType::DistA => String::from(
+                "\nQuartic and Sextic Distortion \
+		 Constants in the Watson A-Reduced Hamiltonian:\n",
+            ),
+            TableType::DistS => String::from(
+                "\nQuartic and Sextic Distortion \
+		 Constants in the Watson S-Reduced Hamiltonian:\n",
+            ),
+            TableType::Curvil => {
+                format!(
+                    "Equilibrium and Vibrationally Averaged Curvilinear \
+		     Coordinates for Mol. {} (in Å or °):\n",
+                    n + 1
+                )
+            }
+            TableType::Fermi => {
+                format!("Fermi resonances for Mol. {}:\n", n + 1)
+            }
+            TableType::Coriol => {
+                format!(
+                    "Coriolis resonances for Mol. {}:
 
-    fn post_table(&self) -> &'static str;
+{:>8}{:>8}",
+                    n + 1,
+                    "Modes",
+                    "Axes",
+                )
+            }
+        }
+    }
+
+    /// called after each table
+    fn post_table(&self) -> &'static str {
+        ""
+    }
 
     /// combine the constant `c` and the subscript `sub` into a single
     /// rotational constant
-    fn rot_const(&self, c: &str, sub: impl Display) -> String;
+    fn rot_const(&self, c: &str, sub: impl std::fmt::Display) -> String {
+        format!("{}{:<5}{}", c, sub, self.sep())
+    }
 
     /// returns the labels for the quartic distortion constants (deltas) in the
     /// order DeltaJ, DeltaK, DeltaJK, deltaJ, deltaK, DJ, DJK, DK, d1, d2
-    fn delta_labels(&self) -> [&'static str; 10];
+    fn delta_labels(&self) -> [&'static str; 10] {
+        [
+            "DELTA J", "DELTA K", "DELTA JK", "delta J", "delta K", "D J",
+            "D JK", "D K", "d 1", "d 2",
+        ]
+    }
 
     /// returns the labels for the sextic distortion constants (phis) in the
     /// order PhiJ, PhiK, PhiJK, PhiKJ, phiJ, phiJK, phiK, HJ, HJK, HKJ, HK, h1,
     /// h2, h3
-    fn phi_labels(&self) -> [&'static str; 14];
+    fn phi_labels(&self) -> [&'static str; 14] {
+        [
+            "PHI J", "PHI K", "PHI JK", "PHI KJ", "phi j", "phi jk", "phi k",
+            "H J", "H JK", "H KJ", "H K", "h 1", "h 2", "h 3",
+        ]
+    }
 
     /// helper method for writing the header for the distortion constant tables
     fn dist_header(
@@ -97,7 +150,17 @@ where
         Ok(())
     }
 
-    fn format_dist_unit(&self, unit: Unit) -> String;
+    fn format_dist_unit(&self, unit: crate::Unit) -> String {
+        String::from(match unit {
+            crate::Unit::uHz => "μHz",
+            crate::Unit::mHz => "mHz",
+            crate::Unit::Hz => "Hz",
+            crate::Unit::kHz => "kHz",
+            crate::Unit::MHz => "MHz",
+            crate::Unit::GHz => "GHz",
+            crate::Unit::THz => "THz",
+        })
+    }
 
     fn print_freqs(
         &self,
