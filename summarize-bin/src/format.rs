@@ -203,18 +203,10 @@ where
     ) -> Result<(), std::fmt::Error> {
         let nsum = self.len();
         write!(f, "{}", self.pre_table(TableType::Rot, 1 + nsum))?;
-        if nsum > 1 {
-            write!(f, "\nConst.{}", self.sep())?;
-            for i in 0..nsum {
-                write!(
-                    f,
-                    r"{:>14}{}{}",
-                    "Mol. ",
-                    i + 1,
-                    self.end(i < nsum - 1)
-                )
+        write!(f, "\nConst.{}", self.sep())?;
+        for i in 0..nsum {
+            write!(f, r"{:>14}{}{}", "Mol. ", i + 1, self.end(i < nsum - 1))
                 .unwrap();
-            }
         }
         writeln!(f)?;
 

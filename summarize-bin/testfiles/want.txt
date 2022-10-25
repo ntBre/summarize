@@ -195,20 +195,20 @@ r( C3  -  H8 )                3.3703695         3.3612464
 <( C3  -  H8  -  H1 )        48.3841523        48.3712538
 
 
-Fermi resonances for for Mol. 1:
+Fermi resonances for Mol. 1:
 
 2w3  = w1 
 2w7  = 2w8  = 2w9  = w3 
 
 
-Fermi resonances for for Mol. 2:
+Fermi resonances for Mol. 2:
 
 2w5  = 2w5  = w7  + w5  = w3 
 w6  + w5  = w4 
 2w12 = 2w12 = w5 
 
 
-Fermi resonances for for Mol. 3:
+Fermi resonances for Mol. 3:
 
 w7  + w6  = w8  + w7  = w9  + w6  = w4 
 2w6  = 2w7  = 2w6  = 2w7  = w8  + w6  = w5 
@@ -221,7 +221,7 @@ w17 + w16 = w18 + w15 = w11
 2w18 = 2w18 = w17
 
 
-Coriolis resonances for for Mol. 1:
+Coriolis resonances for Mol. 1:
 
    Modes    Axes
 ----------------
@@ -234,7 +234,7 @@ w9  = w7    B
 w9  = w8    A
 
 
-Coriolis resonances for for Mol. 2:
+Coriolis resonances for Mol. 2:
 
    Modes    Axes
 ----------------
@@ -242,7 +242,7 @@ w8  = w7    C
 w12 = w10   A
 
 
-Coriolis resonances for for Mol. 3:
+Coriolis resonances for Mol. 3:
 
    Modes    Axes
 ----------------
