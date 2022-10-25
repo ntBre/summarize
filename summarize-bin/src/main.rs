@@ -2,7 +2,7 @@ use clap::Parser;
 
 use summarize::Summary;
 
-use crate::{latex::Latex, text::Text, csv::Csv};
+use crate::{csv::Csv, latex::Latex, org::Org, text::Text};
 
 /// macro for generating max_* methods on `Text`, inspired by this
 /// https://github.com/jonhoo/fantoccini/pull/186#discussion_r990712599
@@ -64,7 +64,8 @@ macro_rules! write_dist_consts {
 	    let nsum = $iter.len();
 	    let vals = $iter.into_iter().map(|sum| sum.$struct.$field).collect();
 	    let (vals, unit) = crate::find_units(vals);
-	    write!($w, "{:<13}{}{:<8}{}", $name, $iter.sep(), $iter.format_dist_unit(unit), $iter.sep())?;
+	    write!($w, "{}{:<13}{}{:<8}{}", $iter.pre(), $name, $iter.sep(),
+		   $iter.format_dist_unit(unit), $iter.sep())?;
 	    for (i, v) in vals.iter().enumerate() {
 		if let Some(d) = v {
 		    write!($w, "{:10.3}", d)?;
@@ -82,6 +83,7 @@ macro_rules! write_dist_consts {
 mod csv;
 mod format;
 mod latex;
+mod org;
 mod text;
 
 #[cfg(test)]
@@ -96,16 +98,20 @@ struct Args {
     vib: bool,
 
     /// print the output in LaTeX format
-    #[arg(short, long, conflicts_with_all = ["json", "csv"])]
+    #[arg(short, long, conflicts_with_all = ["json", "csv", "org"])]
     tex: bool,
 
     /// print the output in JSON format
-    #[arg(short, long, conflicts_with_all = ["tex", "csv"])]
+    #[arg(short, long, conflicts_with_all = ["tex", "csv", "org"])]
     json: bool,
 
     /// print the output in CSV format
-    #[arg(short, long, conflicts_with_all = ["tex", "json"])]
+    #[arg(short, long, conflicts_with_all = ["tex", "json", "org"])]
     csv: bool,
+
+    /// print the output in org format for Emacs
+    #[arg(short, long, conflicts_with_all = ["tex", "json", "csv"])]
+    org: bool,
 
     infiles: Vec<String>,
 }
@@ -174,6 +180,8 @@ fn main() {
         println!("\n{}", serde_json::to_string_pretty(&summaries).unwrap());
     } else if args.csv {
         println!("\n{}", Csv(summaries));
+    } else if args.org {
+        println!("\n{}", Org(summaries));
     } else {
         println!("\n{}", Text(summaries));
     }

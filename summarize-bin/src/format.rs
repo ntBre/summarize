@@ -18,6 +18,9 @@ pub trait Format
 where
     for<'a> &'a Self: IntoIterator<Item = &'a Summary>,
 {
+    /// beginning of row delimiter
+    const PRE: &'static str = "";
+
     /// separator between fields in a table
     const SEP: &'static str = "";
 
@@ -46,6 +49,10 @@ where
 
     fn sep(&self) -> &'static str {
         Self::SEP
+    }
+
+    fn pre(&self) -> &'static str {
+        Self::PRE
     }
 
     fn end(&self, end: bool) -> &'static str {
@@ -103,7 +110,7 @@ where
     }
 
     /// combine the constant `c` and the subscript `sub` into a single
-    /// rotational constant
+    /// rotational constant, followed by `Self::SEP`
     fn rot_const(&self, c: &str, sub: impl std::fmt::Display) -> String {
         format!("{}{:<5}{}", c, sub, self.sep())
     }
@@ -136,7 +143,8 @@ where
     ) -> Result<(), std::fmt::Error> {
         write!(
             f,
-            "{:<13}{}{:<8}{}",
+            "{}{:<13}{}{:<8}{}",
+            self.pre(),
             "Const.",
             self.sep(),
             "Units",
@@ -174,7 +182,7 @@ where
 
         writeln!(f, "{}", self.pre_table(TableType::Vib, 1 + 2 * nsum))?;
 
-        write!(f, "Mode{}", Self::SEP)?;
+        write!(f, "{}Mode{}", self.pre(), self.sep())?;
         for i in 0..nsum {
             write!(
                 f,
@@ -188,7 +196,7 @@ where
         writeln!(f, "\n{dashes}")?;
 
         for i in 0..max_harms {
-            write!(f, " {}{}", self.omega(i + 1), Self::SEP)?;
+            write!(f, "{} {}{}", self.pre(), self.omega(i + 1), Self::SEP)?;
             for (j, sum) in self.into_iter().enumerate() {
                 if let Some(v) = sum.harm.get(i) {
                     write!(
@@ -215,7 +223,7 @@ where
             writeln!(f)?;
         }
         writeln!(f, "{}", dashes)?;
-        write!(f, " ZPT{}", self.sep())?;
+        write!(f, "{} ZPT{}", self.pre(), self.sep())?;
         for (i, sum) in self.into_iter().enumerate() {
             write!(
                 f,
@@ -229,7 +237,7 @@ where
         writeln!(f)?;
 
         for i in 0..max_corrs {
-            write!(f, " {}{}", self.nu(i + 1), self.sep())?;
+            write!(f, "{} {}{}", self.pre(), self.nu(i + 1), self.sep())?;
             for (j, sum) in self.into_iter().enumerate() {
                 if let Some(v) = sum.corr.get(i) {
                     write!(
@@ -266,7 +274,14 @@ where
     ) -> Result<(), std::fmt::Error> {
         let nsum = self.len();
         write!(f, "{}", self.pre_table(TableType::Rot, 1 + nsum))?;
-        write!(f, "\nConst.{}{:>8}{}", self.sep(), "Units", self.sep())?;
+        write!(
+            f,
+            "\n{}Const.{}{:>8}{}",
+            self.pre(),
+            self.sep(),
+            "Units",
+            self.sep()
+        )?;
         for i in 0..nsum {
             write!(f, r"{:>14}{}{}", "Mol. ", i + 1, self.end(i < nsum - 1))
                 .unwrap();
@@ -284,7 +299,8 @@ where
             // apparently rot_const gives me a sep anyway
             write!(
                 f,
-                "{}{:>8}{}",
+                "{}{}{:>8}{}",
+                self.pre(),
                 self.rot_const(["A", "B", "C"][j], "e"),
                 "MHz",
                 self.sep(),
@@ -309,7 +325,8 @@ where
             for j in 0..3 {
                 write!(
                     f,
-                    "{}{:>8}{}",
+                    "{}{}{:>8}{}",
+                    self.pre(),
                     self.rot_const(["A", "B", "C"][j], i),
                     "MHz",
                     self.sep(),
@@ -345,7 +362,15 @@ where
         }
 
         // this is kappa for the vibrationally-averaged rotational constants
-        write!(f, "{:<6}{}{:8}{}", "k", self.sep(), "", self.sep())?;
+        write!(
+            f,
+            "{}{:<6}{}{:8}{}",
+            self.pre(),
+            "k",
+            self.sep(),
+            "",
+            self.sep()
+        )?;
         for (i, sum) in self.into_iter().enumerate() {
             if sum.rot_equil.len() == 3 {
                 let r = &sum.rots[0];
@@ -443,7 +468,8 @@ where
             writeln!(f, "{}", self.pre_table(TableType::Curvil, i))?;
             writeln!(
                 f,
-                "{:^FIRST$}{}{:>AFTER$}{}{:>AFTER$}{}",
+                "{}{:^FIRST$}{}{:>AFTER$}{}{:>AFTER$}{}",
+                self.pre(),
                 "Coord.",
                 self.sep(),
                 "Equil.",
@@ -456,7 +482,8 @@ where
             for (curvil, (alpha, equil)) in sum.curvils.iter().zip(vals) {
                 write!(
                     f,
-                    "{:FIRST$}{}",
+                    "{}{:FIRST$}{}",
+                    self.pre(),
                     self.curvil_label(curvil, i),
                     self.sep()
                 )?;
@@ -489,6 +516,7 @@ where
             let mut keys: Vec<_> = sum.fermi.keys().collect();
             keys.sort_unstable();
             for c in keys {
+                write!(f, "{}", self.pre())?;
                 for (a, b) in &sum.fermi[c] {
                     if a == b {
                         write!(f, "2{} = ", self.omega(*a))?;
@@ -524,7 +552,8 @@ where
                 // two spaces here and then max axes pads the rest of the room
                 write!(
                     f,
-                    "{} = {}  {}",
+                    "{}{} = {}  {}",
+		    self.pre(),
                     self.omega(*a),
                     self.omega(*b),
                     self.sep()
