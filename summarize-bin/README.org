@@ -2,7 +2,6 @@
 
 #+begin_src shell :results file :file /tmp/summarize.tex
   cargo run ../testfiles/spectro.out ../testfiles/c2h4.out ../testfiles/allyl.out -t
-  pdflatex -output-directory /tmp /tmp/summarize.tex
 #+end_src
 
 #+RESULTS:

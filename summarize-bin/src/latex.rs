@@ -98,7 +98,7 @@ impl Format for Latex {
                 )
             }
             TableType::Rot => {
-                let mut s = String::from("l");
+                let mut s = String::from("lr");
                 for _ in 1..cols {
                     s.push('r');
                 }

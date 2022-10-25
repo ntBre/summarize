@@ -203,7 +203,7 @@ where
     ) -> Result<(), std::fmt::Error> {
         let nsum = self.len();
         write!(f, "{}", self.pre_table(TableType::Rot, 1 + nsum))?;
-        write!(f, "\nConst.{}", self.sep())?;
+        write!(f, "\nConst.{}{:>8}{}", self.sep(), "Units", self.sep())?;
         for i in 0..nsum {
             write!(f, r"{:>14}{}{}", "Mol. ", i + 1, self.end(i < nsum - 1))
                 .unwrap();
@@ -213,12 +213,19 @@ where
         const WIDTH: usize = 15;
         const PREC: usize = 1;
 
-        let dashes = Self::line(6 + WIDTH * nsum);
+        let dashes = Self::line(6 + 8 + WIDTH * nsum);
         writeln!(f, "{dashes}")?;
 
         // equilibrium
         for j in 0..3 {
-            write!(f, "{}", self.rot_const(["A", "B", "C"][j], "e"))?;
+            // apparently rot_const gives me a sep anyway
+            write!(
+                f,
+                "{}{:>8}{}",
+                self.rot_const(["A", "B", "C"][j], "e"),
+                "MHz",
+                self.sep(),
+            )?;
             for (i, sum) in self.into_iter().enumerate() {
                 if let Some(rot) = sum.rot_equil.get(j) {
                     write!(
@@ -237,7 +244,13 @@ where
         for i in 0..self.max_rots() {
             // loop over a, b, and c
             for j in 0..3 {
-                write!(f, "{}", self.rot_const(["A", "B", "C"][j], i))?;
+                write!(
+                    f,
+                    "{}{:>8}{}",
+                    self.rot_const(["A", "B", "C"][j], i),
+                    "MHz",
+                    self.sep(),
+                )?;
                 for (k, sum) in self.into_iter().enumerate() {
                     if let Some(rot) = sum.rots.get(i) {
                         if let Some(abc) = rot.get(j) {
@@ -269,7 +282,7 @@ where
         }
 
         // this is kappa for the vibrationally-averaged rotational constants
-        write!(f, "{:<6}{}", "k", self.sep())?;
+        write!(f, "{:<6}{}{:8}{}", "k", self.sep(), "", self.sep())?;
         for (i, sum) in self.into_iter().enumerate() {
             if sum.rot_equil.len() == 3 {
                 let r = &sum.rots[0];
