@@ -340,6 +340,7 @@ name = "summarize-bin"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "regex",
  "summarize",
  "symm",
 ]

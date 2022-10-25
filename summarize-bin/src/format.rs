@@ -93,7 +93,7 @@ where
             for i in 0..nsum {
                 write!(
                     f,
-                    r"{:>16} {}{}",
+                    r"{:>8} {}{}",
                     "Mol.",
                     i + 1,
                     self.end(i < nsum - 1)
@@ -310,7 +310,7 @@ where
     ) -> Result<(), std::fmt::Error> {
         let nsum = self.len();
         writeln!(f, "{}", self.pre_table(TableType::DistA, 1 + nsum))?;
-        let dashes = Self::line(13 + 8 + 18 * nsum);
+        let dashes = Self::line(13 + 8 + 10 * nsum);
 
         self.dist_header(nsum, f, &dashes)?;
 
@@ -365,7 +365,7 @@ where
             h3 =>  phi_labels[13],
         }
 
-        writeln!(f, "{}", self.post_table())?;
+        writeln!(f, "{}\n", self.post_table())?;
 
         Ok(())
     }

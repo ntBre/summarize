@@ -67,9 +67,9 @@ macro_rules! write_dist_consts {
 	    write!($w, "{:<13}{}{:<8}{}", $name, $iter.sep(), $iter.format_dist_unit(unit), $iter.sep())?;
 	    for (i, v) in vals.iter().enumerate() {
 		if let Some(d) = v {
-		    write!($w, "{:18.10}", d)?;
+		    write!($w, "{:10.3}", d)?;
 		} else {
-		    write!($w, "{:18.10}", "")?;
+		    write!($w, "{:10.3}", "")?;
 		}
 		write!($w, "{}", $iter.end(i < nsum-1))?;
 	    }
@@ -143,6 +143,9 @@ fn main() {
     if args.vib {
         just_vib(&summaries);
     } else if args.tex {
+        let summaries = format!("{}", Latex(summaries));
+        let minus = regex::Regex::new(r"(\s+)-(\d)").unwrap();
+        let summaries = minus.replace_all(&summaries, "$1$$-$$$2");
         println!(
             r"\documentclass{{article}}
 
@@ -155,7 +158,7 @@ fn main() {
 
 \end{{document}}
 ",
-            Latex(summaries)
+            summaries
         );
     } else {
         println!("\n{}", Text(summaries));
