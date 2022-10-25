@@ -362,7 +362,6 @@ where
     ) -> Result<(), std::fmt::Error> {
         const FIRST: usize = 21;
         const AFTER: usize = 18;
-        const PREC: usize = 7;
         let dashes = Self::line(FIRST + AFTER * 2);
         for (i, sum) in self.into_iter().enumerate() {
             writeln!(f, "{}", self.pre_table(TableType::Curvil, i))?;
@@ -385,9 +384,14 @@ where
                     self.curvil_label(curvil, i),
                     self.sep()
                 )?;
+                let prec = match curvil {
+                    Curvil::Bond(_, _) => 5,
+                    Curvil::Angle(_, _, _) => 3,
+                    Curvil::Torsion(_, _, _, _) => todo!(),
+                };
                 writeln!(
                     f,
-                    "{:AFTER$.PREC$}{}{:AFTER$.PREC$}{}",
+                    "{:AFTER$.prec$}{}{:AFTER$.prec$}{}",
                     equil,
                     self.sep(),
                     alpha,
