@@ -81,25 +81,17 @@ where
         f: &mut std::fmt::Formatter,
         dashes: impl Display,
     ) -> Result<(), std::fmt::Error> {
-        if nsum > 1 {
-            write!(
-                f,
-                "{:<13}{}{:<8}{}",
-                "Const.",
-                self.sep(),
-                "Units",
-                self.sep()
-            )?;
-            for i in 0..nsum {
-                write!(
-                    f,
-                    r"{:>8} {}{}",
-                    "Mol.",
-                    i + 1,
-                    self.end(i < nsum - 1)
-                )
+        write!(
+            f,
+            "{:<13}{}{:<8}{}",
+            "Const.",
+            self.sep(),
+            "Units",
+            self.sep()
+        )?;
+        for i in 0..nsum {
+            write!(f, r"{:>8} {}{}", "Mol.", i + 1, self.end(i < nsum - 1))
                 .unwrap();
-            }
         }
         writeln!(f, "\n{dashes}")?;
         Ok(())

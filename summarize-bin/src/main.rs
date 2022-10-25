@@ -86,7 +86,7 @@ mod text;
 #[cfg(test)]
 mod tests;
 
-/// Simple program to greet a person
+/// summarize the output of SPECTRO
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -135,7 +135,8 @@ fn just_vib(summaries: &Vec<Summary>) {
 fn main() {
     let args = Args::parse();
     if args.infiles.is_empty() {
-        panic!("usage: summarize FILENAME...");
+        eprintln!("usage: summarize FILENAME...");
+	return;
     }
 
     let summaries: Vec<_> = args.infiles.iter().map(Summary::new).collect();
