@@ -2,7 +2,7 @@ use clap::Parser;
 
 use summarize::Summary;
 
-use crate::{latex::Latex, text::Text};
+use crate::{latex::Latex, text::Text, csv::Csv};
 
 /// macro for generating max_* methods on `Text`, inspired by this
 /// https://github.com/jonhoo/fantoccini/pull/186#discussion_r990712599
@@ -79,6 +79,7 @@ macro_rules! write_dist_consts {
     };
 }
 
+mod csv;
 mod format;
 mod latex;
 mod text;
@@ -95,12 +96,16 @@ struct Args {
     vib: bool,
 
     /// print the output in LaTeX format
-    #[arg(short, long, conflicts_with_all = ["json"])]
+    #[arg(short, long, conflicts_with_all = ["json", "csv"])]
     tex: bool,
 
     /// print the output in JSON format
-    #[arg(short, long, conflicts_with_all = ["tex"])]
+    #[arg(short, long, conflicts_with_all = ["tex", "csv"])]
     json: bool,
+
+    /// print the output in CSV format
+    #[arg(short, long, conflicts_with_all = ["tex", "json"])]
+    csv: bool,
 
     infiles: Vec<String>,
 }
@@ -167,6 +172,8 @@ fn main() {
         );
     } else if args.json {
         println!("\n{}", serde_json::to_string_pretty(&summaries).unwrap());
+    } else if args.csv {
+        println!("\n{}", Csv(summaries));
     } else {
         println!("\n{}", Text(summaries));
     }
