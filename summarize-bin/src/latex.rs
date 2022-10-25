@@ -214,14 +214,13 @@ impl Format for Latex {
         let sum = &self.0[i];
         match curvil {
             Bond(a, b) => format!(
-                "$r(\\text{{{:>2}}}_{{{a:<2}}} - \\text{{{:>2}}}_{{{b:<2}}})$",
+                "$r(\\text{{{}}}_{{{a}}} - \\text{{{}}}_{{{b}}})$",
                 sum.geom.atoms[*a - 1].label(),
                 sum.geom.atoms[*b - 1].label()
             ),
             Angle(a, b, c) => format!(
-                // "<({:>2}{a:<2} - {:>2}{b:<2} - {:>2}{c:<2})",
-                "$\\angle(\\text{{{:>2}}}_{{{a:<2}}} - \
-		 \\text{{{:>2}}}_{{{b:<2}}} - \\text{{{:>2}}}_{{{c:<2}}})$",
+                "$\\angle(\\text{{{}}}_{{{a}}} - \
+		 \\text{{{}}}_{{{b}}} - \\text{{{}}}_{{{c}}})$",
                 sum.geom.atoms[*a - 1].label(),
                 sum.geom.atoms[*b - 1].label(),
                 sum.geom.atoms[*c - 1].label()
