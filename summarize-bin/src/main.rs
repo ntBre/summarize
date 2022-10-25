@@ -166,7 +166,7 @@ fn main() {
             summaries
         );
     } else if args.json {
-        println!("\n{}", serde_json::to_string_pretty(&summaries[0]).unwrap());
+        println!("\n{}", serde_json::to_string_pretty(&summaries).unwrap());
     } else {
         println!("\n{}", Text(summaries));
     }
