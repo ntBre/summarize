@@ -3,6 +3,8 @@ use std::fmt::Display;
 use summarize::{curvil::Curvil, Summary};
 use symm::Irrep;
 
+use crate::Unit;
+
 #[allow(unused)]
 pub enum TableType {
     Vib,
@@ -80,7 +82,14 @@ where
         dashes: impl Display,
     ) -> Result<(), std::fmt::Error> {
         if nsum > 1 {
-            write!(f, "{:<13}{}", "Const.", self.sep())?;
+            write!(
+                f,
+                "{:<13}{}{:<8}{}",
+                "Const.",
+                self.sep(),
+                "Units",
+                self.sep()
+            )?;
             for i in 0..nsum {
                 write!(
                     f,
@@ -95,6 +104,8 @@ where
         writeln!(f, "\n{dashes}")?;
         Ok(())
     }
+
+    fn format_dist_unit(&self, unit: Unit) -> String;
 
     fn print_freqs(
         &self,
@@ -299,7 +310,7 @@ where
     ) -> Result<(), std::fmt::Error> {
         let nsum = self.len();
         writeln!(f, "{}", self.pre_table(TableType::DistA, 1 + nsum))?;
-        let dashes = Self::line(13 + 18 * nsum);
+        let dashes = Self::line(13 + 8 + 18 * nsum);
 
         self.dist_header(nsum, f, &dashes)?;
 

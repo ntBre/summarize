@@ -18,20 +18,62 @@ macro_rules! max_fields {
     };
 }
 
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub enum Unit {
+    uHz,
+    mHz,
+    Hz,
+    kHz,
+    MHz,
+    GHz,
+    THz,
+}
+
+/// find the optimal units for displaying distortion constants with 5 sig figs
+/// and convert `vals` to those units
+fn find_units(vals: Vec<Option<f64>>) -> (Vec<Option<f64>>, Unit) {
+    /// multiplicative value/unit pairs for converting from MHz
+    const UNITS: [(f64, Unit); 6] = [
+        //
+        (1e9, Unit::mHz),
+        (1e6, Unit::Hz),
+        (1e3, Unit::kHz),
+        (1e0, Unit::MHz),
+        (1e-3, Unit::GHz),
+        (1e-6, Unit::THz),
+    ];
+    for (u, s) in UNITS {
+        // want the smallest unit for which every v is < 1000.0
+        if vals
+            .iter()
+            .flatten()
+            .map(|v| v * u)
+            .all(|a| a.abs() < 1000.0)
+        {
+            return (vals.iter().map(|v| v.map(|v| v * u)).collect(), s);
+        }
+    }
+    (vals, Unit::MHz)
+}
+
 macro_rules! write_dist_consts {
     ($w:ident, $iter: expr, $struct:ident,
      $($field:ident => $name:expr$(,)?),*) => {
 	$(
-	    write!($w, "{:<13}{}", $name, $iter.sep())?;
 	    let nsum = $iter.len();
-	    for (i, sum) in $iter.into_iter().enumerate() {
-		if let Some(d) = sum.$struct.$field {
+	    let vals = $iter.into_iter().map(|sum| sum.$struct.$field).collect();
+	    let (vals, unit) = crate::find_units(vals);
+	    write!($w, "{:<13}{}{:<8}{}", $name, $iter.sep(), $iter.format_dist_unit(unit), $iter.sep())?;
+	    for (i, v) in vals.iter().enumerate() {
+		if let Some(d) = v {
 		    write!($w, "{:18.10}", d)?;
 		} else {
 		    write!($w, "{:18.10}", "")?;
 		}
 		write!($w, "{}", $iter.end(i < nsum-1))?;
 	    }
+
 	    writeln!($w)?;
 	)*
     };

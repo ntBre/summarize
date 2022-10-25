@@ -43,11 +43,11 @@ impl Format for Text {
             }
             TableType::DistA => String::from(
                 "\nQuartic and Sextic Distortion \
-		 Constants in the Watson A-Reduced Hamiltonian (in MHz):\n",
+		 Constants in the Watson A-Reduced Hamiltonian:\n",
             ),
             TableType::DistS => String::from(
                 "\nQuartic and Sextic Distortion \
-		 Constants in the Watson S-Reduced Hamiltonian (in MHz):\n",
+		 Constants in the Watson S-Reduced Hamiltonian:\n",
             ),
             TableType::Curvil => {
                 format!(
@@ -112,6 +112,18 @@ impl Format for Text {
             // pretty sure nothing else is printed in this part
             Torsion(_, _, _, _) => todo!(),
         }
+    }
+
+    fn format_dist_unit(&self, unit: crate::Unit) -> String {
+        String::from(match unit {
+            crate::Unit::uHz => "μHz",
+            crate::Unit::mHz => "mHz",
+            crate::Unit::Hz => "Hz",
+            crate::Unit::kHz => "kHz",
+            crate::Unit::MHz => "MHz",
+            crate::Unit::GHz => "GHz",
+            crate::Unit::THz => "THz",
+        })
     }
 }
 

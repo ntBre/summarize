@@ -99,7 +99,7 @@ impl Format for Latex {
             }
             TableType::Rot => {
                 let mut s = String::from("l");
-                for _ in 0..cols {
+                for _ in 1..cols {
                     s.push('r');
                 }
                 let cap = "Rotational Constants (in MHz)";
@@ -113,15 +113,15 @@ impl Format for Latex {
             TableType::DistA | TableType::DistS => {
                 let cap = format!(
                     "Quartic and sextic distortion constants in the \
-				   Watson {}-reduced Hamiltonian (in MHz)",
+				   Watson {}-reduced Hamiltonian",
                     if matches!(typ, TableType::DistA) {
                         "A"
                     } else {
                         "S"
                     }
                 );
-                let mut s = String::from("l");
-                for _ in 0..cols {
+                let mut s = String::from("ll");
+                for _ in 1..cols {
                     s.push('r');
                 }
                 format!(
@@ -229,6 +229,18 @@ impl Format for Latex {
             // pretty sure nothing else is printed in this part
             Torsion(_, _, _, _) => todo!(),
         }
+    }
+
+    fn format_dist_unit(&self, unit: crate::Unit) -> String {
+        String::from(match unit {
+            crate::Unit::uHz => r"$\mu$Hz",
+            crate::Unit::mHz => "mHz",
+            crate::Unit::Hz => "Hz",
+            crate::Unit::kHz => "kHz",
+            crate::Unit::MHz => "MHz",
+            crate::Unit::GHz => "GHz",
+            crate::Unit::THz => "THz",
+        })
     }
 }
 
