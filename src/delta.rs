@@ -17,6 +17,9 @@ pub struct Delta {
     pub d_k: Option<f64>,
     pub d1: Option<f64>,
     pub d2: Option<f64>,
+
+    /// linear molecules only
+    pub de: Option<f64>,
 }
 
 impl Display for Delta {

@@ -97,6 +97,7 @@ H                  1.5951933      0.9069249      0.0000000
             d_k: Some(-0.0442077731),
             d1: Some(-0.0158360300),
             d2: Some(-0.0102907278),
+            de: None,
         },
         phis: Phi {
             big_phi_j: Some(1.189560512e-7),
@@ -113,6 +114,7 @@ H                  1.5951933      0.9069249      0.0000000
             h1: Some(5.516109046e-8),
             h2: Some(1.159956922e-7),
             h3: Some(4.148099836e-9),
+            he: None,
         },
         fermi: HashMap::from([
             (3, vec![(7, 7), (8, 8), (9, 9)]),
@@ -209,6 +211,7 @@ fn c2h4() {
             d_k: Some(2.4494008737),
             d1: Some(-0.0081815174),
             d2: Some(-0.0015354312),
+            de: None,
         },
         phis: Phi {
             big_phi_j: Some(6.866115216e-8),
@@ -225,6 +228,7 @@ fn c2h4() {
             h1: Some(2.7214769569999997e-8),
             h2: Some(2.2352364650000002e-8),
             h3: Some(5.1134704169999995e-9),
+            he: None,
         },
         fermi: HashMap::from([
             (3, vec![(5, 5), (5, 5), (7, 5)]),
@@ -294,7 +298,14 @@ fn degmode() {
         )
         .unwrap(),
         lxm: load_mat("testfiles/degmode.lxm"),
-        rots: vec![],
+        rots: vec![
+            vec![35902.40128478416],
+            vec![35846.80177552348],
+            vec![35893.04476216998],
+            vec![35785.20042125364],
+            vec![35928.61513731168],
+            vec![35954.52320153204],
+        ],
         rot_equil: vec![35915.1364684],
         deltas: Delta {
             big_delta_j: None,
@@ -307,6 +318,7 @@ fn degmode() {
             d_k: None,
             d1: None,
             d2: None,
+            de: Some(0.0410990452),
         },
         phis: Phi {
             big_phi_j: None,
@@ -323,6 +335,7 @@ fn degmode() {
             h1: None,
             h2: None,
             h3: None,
+            he: Some(0.0493895173 / 1e6),
         },
         fermi: HashMap::new(),
         coriolis: Coriol::default(),
@@ -335,8 +348,8 @@ fn degmode() {
             Linear(3, 2, 4),
             Linear(3, 2, 4),
         ],
-        ralpha: vec![],
-        requil: vec![],
+        ralpha: vec![2.232577, 1.2064508, 2.232577, 0.0264087, 0.0264087],
+        requil: vec![2.2367497, 1.2028487, 2.2367497, 0.0, 0.0],
     };
     check!(got, want);
 }
@@ -413,6 +426,7 @@ H    2.1461889     -0.2660770      0.0000000
             d_k: Some(0.5741927225),
             d1: Some(-0.0024231046),
             d2: Some(-0.000162424),
+            de: None,
         },
         phis: Phi {
             big_phi_j: Some(1.1901194190000001e-8),
@@ -429,6 +443,7 @@ H    2.1461889     -0.2660770      0.0000000
             h1: Some(5.450988672e-9),
             h2: Some(1.2298772109999998e-9),
             h3: Some(3.4988730580000003e-10),
+            he: None,
         },
         fermi: HashMap::from([
             (4, vec![(7, 6), (8, 7), (9, 6)]),
@@ -558,6 +573,7 @@ H   -1.3465409      1.3195405      0.0000000
             d_k: Some(-0.0125957481),
             d1: Some(-0.0146787609),
             d2: Some(-0.0062917688),
+            de: None,
         },
         phis: Phi {
             big_phi_j: Some(1.026257342e-7),
@@ -574,6 +590,7 @@ H   -1.3465409      1.3195405      0.0000000
             h1: Some(2.9711917340000003e-8),
             h2: Some(7.415185547e-8),
             h3: Some(2.128595271e-8),
+            he: None,
         },
         fermi: HashMap::from([(
             4,
@@ -593,6 +610,7 @@ H   -1.3465409      1.3195405      0.0000000
             ]),
         },
         zpt: 8904.3886,
+        // this one actually doesn't have curvils in input
         curvils: vec![],
         ralpha: vec![],
         requil: vec![],

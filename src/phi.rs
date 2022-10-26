@@ -20,6 +20,8 @@ pub struct Phi {
     pub h1: Option<f64>,
     pub h2: Option<f64>,
     pub h3: Option<f64>,
+    // linear molecules
+    pub he: Option<f64>,
 }
 
 impl Display for Phi {

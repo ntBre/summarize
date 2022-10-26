@@ -80,8 +80,8 @@ lazy_static! {
     ]);
     static ref HEADER: Regex = Regex::new(r"^(\s*\d+)+\s*$").unwrap();
     static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
-    static ref DELTA: Regex = Regex::new(r"(?i)^  d(elta)? [jk12]+ ").unwrap();
-    static ref PHI: Regex = Regex::new(r"(?i)^  (p)?h(i)? [jk123]+ ").unwrap();
+    static ref DELTA: Regex = Regex::new(r"(?i)(^  d(elta)? [jk12]+ |^ De\b)").unwrap();
+    static ref PHI: Regex = Regex::new(r"(?i)(^  (p)?h(i)? [jk123]+ |^ He\b)").unwrap();
     static ref FERMI: Regex = Regex::new(r"(?i)^ INPUTED FERMI").unwrap();
     static ref CORIOL: Regex = Regex::new(r"(?i)^ INPUTED CORIOLIS").unwrap();
     /// empty line
@@ -185,7 +185,8 @@ enum State {
     Corr,
     Geom,
     Lxm,
-    Rots,
+    RotA,
+    RotS,
     Fermi1,
     Fermi2,
     Coriolis,
@@ -354,14 +355,19 @@ impl Summary {
                     line.split_whitespace().skip(2).map(|s| s.to_string()),
                 );
             } else if line.contains("ROTATIONAL ENERGY LEVEL ANALYSIS") {
-                state = State::Rots;
+                state = State::RotA;
                 rot_good = true;
             } else if rot_good && line.contains("BZA") {
-                state = State::Rots;
-            } else if state == State::Rots && COORD.is_match(&line) {
+                state = State::RotA;
+            } else if rot_good
+                && ret.deltas.de.is_some()
+                && line.contains("BZS")
+            {
+                state = State::RotS;
+            } else if COORD.is_match(&line) {
                 state = State::Coords;
-                skip = 12;
-            } else if state == State::Rots && rot_good {
+                skip = 12 + i32::from(ret.rot_equil.len() == 1);
+            } else if state == State::RotA && rot_good {
                 let mut one = false;
                 for state in &rot_states {
                     if (*state == "1" && one) || *state == "2" {
@@ -384,6 +390,34 @@ impl Summary {
                     .collect();
                 v.sort_by(|a, b| b.partial_cmp(a).unwrap());
                 ret.rots.push(v);
+            } else if state == State::RotS && rot_good {
+                let mut one = false;
+                for state in &rot_states {
+                    if (*state == "1" && one) || *state == "2" {
+                        continue 'outer;
+                    } else if *state == "1" {
+                        one = true;
+                    }
+                }
+                rot_states.clear();
+                state = State::None;
+                let fields: Vec<_> = line.split_whitespace().collect();
+                if fields.len() != 3 {
+                    // this says "sad hack" next to it in the Go version, not
+                    // sure why yet
+                    continue;
+                }
+                let mut v: Vec<_> = fields
+                    .iter()
+                    .map(|s| s.parse().unwrap_or(BAD_FLOAT) * TO_MHZ)
+                    .collect();
+                v.sort_by(|a, b| b.abs().partial_cmp(&a.abs()).unwrap());
+		// for linear molecules, there is only one unique rotational
+		// constant, reported twice, and the third one is zero. sorting
+		// by abs moves the real one to the front. for some reason,
+		// spectro also reports it as the difference from equilibrium so
+		// add to that.
+                ret.rots.push(vec![v[0] + ret.rot_equil[0]]);
             } else if line.contains("Be") {
                 // line like  ' (Be =    1.64769 IN CM-1)'
                 ret.rot_equil.push(
@@ -396,45 +430,63 @@ impl Summary {
                 );
             } else if DELTA.is_match(&line) {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
-                let v: f64 = sp[4].parse().unwrap();
-                match (sp[0], sp[1]) {
-                    // A reduction
-                    ("DELTA", "J") => ret.deltas.big_delta_j = Some(v),
-                    ("DELTA", "K") => ret.deltas.big_delta_k = Some(v),
-                    ("DELTA", "JK") => ret.deltas.big_delta_jk = Some(v),
-                    ("delta", "J") => ret.deltas.delta_j = Some(v),
-                    ("delta", "K") => ret.deltas.delta_k = Some(v),
-                    // S reduction
-                    ("D", "J") => ret.deltas.d_j = Some(v),
-                    ("D", "JK") => ret.deltas.d_jk = Some(v),
-                    ("D", "K") => ret.deltas.d_k = Some(v),
-                    ("d", "1") => ret.deltas.d1 = Some(v),
-                    ("d", "2") => ret.deltas.d2 = Some(v),
-                    _ => panic!("failed to match '{}' and '{}'", sp[0], sp[1]),
+                if sp.len() > 3 {
+                    let v: f64 = sp[4].parse().unwrap();
+                    match (sp[0], sp[1]) {
+                        // A reduction
+                        ("DELTA", "J") => ret.deltas.big_delta_j = Some(v),
+                        ("DELTA", "K") => ret.deltas.big_delta_k = Some(v),
+                        ("DELTA", "JK") => ret.deltas.big_delta_jk = Some(v),
+                        ("delta", "J") => ret.deltas.delta_j = Some(v),
+                        ("delta", "K") => ret.deltas.delta_k = Some(v),
+                        // S reduction
+                        ("D", "J") => ret.deltas.d_j = Some(v),
+                        ("D", "JK") => ret.deltas.d_jk = Some(v),
+                        ("D", "K") => ret.deltas.d_k = Some(v),
+                        ("d", "1") => ret.deltas.d1 = Some(v),
+                        ("d", "2") => ret.deltas.d2 = Some(v),
+                        _ => panic!(
+                            "failed to match '{}' and '{}'",
+                            sp[0], sp[1]
+                        ),
+                    }
+                } else {
+                    // linear
+                    ret.deltas.de = Some(sp[2].parse().unwrap());
                 }
             } else if PHI.is_match(&line) {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
-                // phi is in Hz in the file, so turn it to MHz
-                let v: f64 =
-                    sp[4].replace('D', "E").parse::<f64>().unwrap() / 1e6;
-                match (sp[0], sp[1]) {
-                    // A reduction
-                    ("PHI", "J") => ret.phis.big_phi_j = Some(v),
-                    ("PHI", "K") => ret.phis.big_phi_k = Some(v),
-                    ("PHI", "JK") => ret.phis.big_phi_jk = Some(v),
-                    ("PHI", "KJ") => ret.phis.big_phi_kj = Some(v),
-                    ("phi", "j") => ret.phis.phi_j = Some(v),
-                    ("phi", "jk") => ret.phis.phi_jk = Some(v),
-                    ("phi", "k") => ret.phis.phi_k = Some(v),
-                    // S reduction
-                    ("H", "J") => ret.phis.h_j = Some(v),
-                    ("H", "JK") => ret.phis.h_jk = Some(v),
-                    ("H", "KJ") => ret.phis.h_kj = Some(v),
-                    ("H", "K") => ret.phis.h_k = Some(v),
-                    ("h", "1") => ret.phis.h1 = Some(v),
-                    ("h", "2") => ret.phis.h2 = Some(v),
-                    ("h", "3") => ret.phis.h3 = Some(v),
-                    _ => panic!("failed to match '{}' and '{}'", sp[0], sp[1]),
+                if sp.len() > 3 {
+                    // phi is in Hz in the file, so turn it to MHz
+                    let v: f64 =
+                        sp[4].replace('D', "E").parse::<f64>().unwrap() / 1e6;
+                    match (sp[0], sp[1]) {
+                        // A reduction
+                        ("PHI", "J") => ret.phis.big_phi_j = Some(v),
+                        ("PHI", "K") => ret.phis.big_phi_k = Some(v),
+                        ("PHI", "JK") => ret.phis.big_phi_jk = Some(v),
+                        ("PHI", "KJ") => ret.phis.big_phi_kj = Some(v),
+                        ("phi", "j") => ret.phis.phi_j = Some(v),
+                        ("phi", "jk") => ret.phis.phi_jk = Some(v),
+                        ("phi", "k") => ret.phis.phi_k = Some(v),
+                        // S reduction
+                        ("H", "J") => ret.phis.h_j = Some(v),
+                        ("H", "JK") => ret.phis.h_jk = Some(v),
+                        ("H", "KJ") => ret.phis.h_kj = Some(v),
+                        ("H", "K") => ret.phis.h_k = Some(v),
+                        ("h", "1") => ret.phis.h1 = Some(v),
+                        ("h", "2") => ret.phis.h2 = Some(v),
+                        ("h", "3") => ret.phis.h3 = Some(v),
+                        _ => panic!(
+                            "failed to match '{}' and '{}'",
+                            sp[0], sp[1]
+                        ),
+                    }
+                } else {
+                    // linear molecule
+                    ret.phis.he = Some(
+                        sp[2].replace('D', "E").parse::<f64>().unwrap() / 1e6,
+                    );
                 }
             } else if FERMI.is_match(&line) {
                 let v = line.split_ascii_whitespace().nth(2).unwrap();
@@ -477,8 +529,10 @@ impl Summary {
                 state = State::None;
             } else if state.is_coords() {
                 let v = line.split_ascii_whitespace().collect::<Vec<_>>();
-                ret.requil.push(v[2].parse().unwrap());
-                ret.ralpha.push(v[4].parse().unwrap());
+                // have to skip "ANGLE" for linear angles
+                let off = usize::from(v[1] == "LINEAR");
+                ret.requil.push(v[2 + off].parse().unwrap());
+                ret.ralpha.push(v[4 + off].parse().unwrap());
             } else if CURVIL.is_match(&line) {
                 state = State::Curvil;
                 skip = 4;

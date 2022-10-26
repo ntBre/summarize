@@ -175,7 +175,7 @@ impl Format for Latex {
         format!("${}_{{{:<5}}}${}", c, sub, self.sep())
     }
 
-    fn delta_labels(&self) -> [&'static str; 10] {
+    fn delta_labels(&self) -> [&'static str; 11] {
         [
             r"$\Delta_{J}$",
             r"$\Delta_{K}$",
@@ -187,10 +187,11 @@ impl Format for Latex {
             r"$D_{K}$",
             r"$d_{1}$",
             r"$d_{2}$",
+            r"$D_{e}$",
         ]
     }
 
-    fn phi_labels(&self) -> [&'static str; 14] {
+    fn phi_labels(&self) -> [&'static str; 15] {
         [
             r"$\Phi_{J}$",
             r"$\Phi_{K}$",
@@ -206,6 +207,7 @@ impl Format for Latex {
             r"$h_{1}$",
             r"$h_{2}$",
             r"$h_{3}$",
+            r"$H_{e}$",
         ]
     }
 

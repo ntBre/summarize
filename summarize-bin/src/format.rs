@@ -117,20 +117,20 @@ where
 
     /// returns the labels for the quartic distortion constants (deltas) in the
     /// order DeltaJ, DeltaK, DeltaJK, deltaJ, deltaK, DJ, DJK, DK, d1, d2
-    fn delta_labels(&self) -> [&'static str; 10] {
+    fn delta_labels(&self) -> [&'static str; 11] {
         [
             "DELTA J", "DELTA K", "DELTA JK", "delta J", "delta K", "D J",
-            "D JK", "D K", "d 1", "d 2",
+            "D JK", "D K", "d 1", "d 2", "De",
         ]
     }
 
     /// returns the labels for the sextic distortion constants (phis) in the
     /// order PhiJ, PhiK, PhiJK, PhiKJ, phiJ, phiJK, phiK, HJ, HJK, HKJ, HK, h1,
     /// h2, h3
-    fn phi_labels(&self) -> [&'static str; 14] {
+    fn phi_labels(&self) -> [&'static str; 15] {
         [
             "PHI J", "PHI K", "PHI JK", "PHI KJ", "phi j", "phi jk", "phi k",
-            "H J", "H JK", "H KJ", "H K", "h 1", "h 2", "h 3",
+            "H J", "H JK", "H KJ", "H K", "h 1", "h 2", "h 3", "He",
         ]
     }
 
@@ -306,7 +306,17 @@ where
                 self.sep(),
             )?;
             for (i, sum) in self.into_iter().enumerate() {
-                if let Some(rot) = sum.rot_equil.get(j) {
+                // linear molecule - only have B
+                let rot = if sum.rot_equil.len() == 1 {
+                    if j == 1 {
+                        sum.rot_equil.first()
+                    } else {
+                        None
+                    }
+                } else {
+                    sum.rot_equil.get(j)
+                };
+                if let Some(rot) = rot {
                     write!(
                         f,
                         "{:WIDTH$.PREC$}{}",
@@ -333,7 +343,16 @@ where
                 )?;
                 for (k, sum) in self.into_iter().enumerate() {
                     if let Some(rot) = sum.rots.get(i) {
-                        if let Some(abc) = rot.get(j) {
+                        let abc = if rot.len() == 1 {
+                            if j == 1 {
+                                rot.first()
+                            } else {
+                                None
+                            }
+                        } else {
+                            rot.get(j)
+                        };
+                        if let Some(abc) = abc {
                             write!(
                                 f,
                                 "{:WIDTH$.PREC$}{}",
@@ -435,6 +454,7 @@ where
             d_k => delta_labels[7],
             d1 => delta_labels[8],
             d2 => delta_labels[9],
+        de => delta_labels[10],
         }
 
         writeln!(f, "{dashes}")?;
@@ -448,6 +468,7 @@ where
             h1 =>  phi_labels[11],
             h2 =>  phi_labels[12],
             h3 =>  phi_labels[13],
+        he => phi_labels[14],
         }
 
         writeln!(f, "{}\n", self.post_table())?;
@@ -487,14 +508,16 @@ where
                     self.curvil_label(curvil, i),
                     self.sep()
                 )?;
-                let prec = match curvil {
-                    Curvil::Bond(_, _) => 5,
-                    Curvil::Angle(_, _, _) | Curvil::Linear(_, _, _) => 3,
+                // use this width to control for longer labels of some coords
+                let (width, prec) = match curvil {
+                    Curvil::Bond(_, _) => (AFTER, 5),
+                    Curvil::Angle(_, _, _) => (AFTER, 3),
+                    Curvil::Linear(_, _, _) => (AFTER - 2, 3),
                     Curvil::Torsion(_, _, _, _) => todo!(),
                 };
                 writeln!(
                     f,
-                    "{:AFTER$.prec$}{}{:AFTER$.prec$}{}",
+                    "{:width$.prec$}{}{:AFTER$.prec$}{}",
                     equil,
                     self.sep(),
                     alpha,

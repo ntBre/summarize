@@ -34,8 +34,9 @@ pub enum Unit {
 /// and convert `vals` to those units
 fn find_units(vals: Vec<Option<f64>>) -> (Vec<Option<f64>>, Unit) {
     /// multiplicative value/unit pairs for converting from MHz
-    const UNITS: [(f64, Unit); 6] = [
+    const UNITS: [(f64, Unit); 7] = [
         //
+        (1e12, Unit::uHz),
         (1e9, Unit::mHz),
         (1e6, Unit::Hz),
         (1e3, Unit::kHz),
@@ -62,20 +63,22 @@ macro_rules! write_dist_consts {
      $($field:ident => $name:expr$(,)?),*) => {
 	$(
 	    let nsum = $iter.len();
-	    let vals = $iter.into_iter().map(|sum| sum.$struct.$field).collect();
-	    let (vals, unit) = crate::find_units(vals);
-	    write!($w, "{}{:<13}{}{:<8}{}", $iter.pre(), $name, $iter.sep(),
-		   $iter.format_dist_unit(unit), $iter.sep())?;
-	    for (i, v) in vals.iter().enumerate() {
-		if let Some(d) = v {
-		    write!($w, "{:10.3}", d)?;
-		} else {
-		    write!($w, "{:10.3}", "")?;
+	    let vals: Vec<_> = $iter.into_iter().map(|sum| sum.$struct.$field).collect();
+	    if vals.iter().any(std::option::Option::is_some) {
+		let (vals, unit) = crate::find_units(vals);
+		write!($w, "{}{:<13}{}{:<8}{}", $iter.pre(), $name, $iter.sep(),
+		       $iter.format_dist_unit(unit), $iter.sep())?;
+		for (i, v) in vals.iter().enumerate() {
+		    if let Some(d) = v {
+			write!($w, "{:10.3}", d)?;
+		    } else {
+			write!($w, "{:10.3}", "")?;
+		    }
+		    write!($w, "{}", $iter.end(i < nsum-1))?;
 		}
-		write!($w, "{}", $iter.end(i < nsum-1))?;
-	    }
 
-	    writeln!($w)?;
+		writeln!($w)?;
+	    }
 	)*
     };
 }
