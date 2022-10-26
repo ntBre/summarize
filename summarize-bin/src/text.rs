@@ -38,6 +38,12 @@ impl Format for Text {
             ),
             // pretty sure nothing else is printed in this part
             Torsion(_, _, _, _) => todo!(),
+            Linear(a, b, c) => format!(
+                "LIN({:>2}{a:<2} - {:>2}{b:<2} - {:>2}{c:<2})",
+                sum.geom.atoms[*a - 1].label(),
+                sum.geom.atoms[*b - 1].label(),
+                sum.geom.atoms[*c - 1].label()
+            ),
         }
     }
 }

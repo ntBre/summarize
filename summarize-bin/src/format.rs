@@ -489,7 +489,7 @@ where
                 )?;
                 let prec = match curvil {
                     Curvil::Bond(_, _) => 5,
-                    Curvil::Angle(_, _, _) => 3,
+                    Curvil::Angle(_, _, _) | Curvil::Linear(_, _, _) => 3,
                     Curvil::Torsion(_, _, _, _) => todo!(),
                 };
                 writeln!(
@@ -553,7 +553,7 @@ where
                 write!(
                     f,
                     "{}{} = {}  {}",
-		    self.pre(),
+                    self.pre(),
                     self.omega(*a),
                     self.omega(*b),
                     self.sep()

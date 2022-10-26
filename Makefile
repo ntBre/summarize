@@ -4,11 +4,14 @@ ARGS =
 TARGET = target/x86_64-unknown-linux-gnu/release/summarize-bin
 
 test:
-	RUST_BACKTRACE=1 cargo test -- ${TESTFLAGS} ${ARGS}
+	RUST_BACKTRACE=1 cargo test --workspace --no-fail-fast -- ${TESTFLAGS} ${ARGS}
 
 build:
 	RUSTFLAGS='-C target-feature=+crt-static' \
         cargo build -p summarize-bin --release --target x86_64-unknown-linux-gnu
+
+run:
+	cargo run -p summarize-bin testfiles/spectro.out testfiles/c2h4.out testfiles/allyl.out ${ARGS}
 
 woods: build
 	scp -C $(TARGET) 'woods:bin/rsummarize'

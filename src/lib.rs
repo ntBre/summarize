@@ -40,6 +40,9 @@ pub mod curvil {
         Bond(usize, usize),
         Angle(usize, usize, usize),
         Torsion(usize, usize, usize, usize),
+
+        /// a linear bend
+        Linear(usize, usize, usize),
     }
 }
 
@@ -411,7 +414,9 @@ impl Summary {
                 }
             } else if PHI.is_match(&line) {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
-                let v: f64 = sp[4].replace('D', "E").parse().unwrap();
+                // phi is in Hz in the file, so turn it to MHz
+                let v: f64 =
+                    sp[4].replace('D', "E").parse::<f64>().unwrap() / 1e6;
                 match (sp[0], sp[1]) {
                     // A reduction
                     ("PHI", "J") => ret.phis.big_phi_j = Some(v),
@@ -512,6 +517,17 @@ impl Summary {
                     "BOND" => Bond(ids[0], ids[1]),
                     "ANGLE" => Angle(ids[0], ids[1], ids[2]),
                     "TORSION" => Torsion(ids[0], ids[1], ids[2], ids[3]),
+                    "LINEAR" => {
+                        // the label is actually "LINEAR ANGLE" so we have to
+                        // re-process the line
+                        let v = new_line.split_ascii_whitespace();
+                        let ids: Vec<_> = v
+                            .skip(2)
+                            .step_by(2)
+                            .flat_map(usize::from_str)
+                            .collect();
+                        Linear(ids[0], ids[1], ids[2])
+                    }
                     _ => panic!("unrecognized curvil type {typ}"),
                 });
             }
