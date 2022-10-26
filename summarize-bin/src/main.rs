@@ -99,7 +99,7 @@ mod tests;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// only print the vibrational frequency summary
-    #[arg(short, long, exclusive = true)]
+    #[arg(short, long, conflicts_with_all = ["tex", "json", "csv", "org"])]
     vib: bool,
 
     /// print the output in LaTeX format
