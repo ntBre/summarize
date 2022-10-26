@@ -7,6 +7,7 @@ use std::{
     str::FromStr,
 };
 
+use coriolis::Coriol;
 use curvil::Curvil;
 use delta::Delta;
 use lazy_static::lazy_static;
@@ -412,11 +413,11 @@ impl Summary {
                     .map(|s| s.parse().unwrap_or(BAD_FLOAT) * TO_MHZ)
                     .collect();
                 v.sort_by(|a, b| b.abs().partial_cmp(&a.abs()).unwrap());
-		// for linear molecules, there is only one unique rotational
-		// constant, reported twice, and the third one is zero. sorting
-		// by abs moves the real one to the front. for some reason,
-		// spectro also reports it as the difference from equilibrium so
-		// add to that.
+                // for linear molecules, there is only one unique rotational
+                // constant, reported twice, and the third one is zero. sorting
+                // by abs moves the real one to the front. for some reason,
+                // spectro also reports it as the difference from equilibrium so
+                // add to that.
                 ret.rots.push(vec![v[0] + ret.rot_equil[0]]);
             } else if line.contains("Be") {
                 // line like  ' (Be =    1.64769 IN CM-1)'
@@ -692,5 +693,79 @@ impl Display for Summary {
         writeln!(f, "{}", self.phis)?;
 
         Ok(())
+    }
+}
+
+impl From<spectro::Output> for Summary {
+    fn from(value: spectro::Output) -> Self {
+        let rots = value
+            .rots
+            .iter()
+            .map(|r| vec![TO_MHZ * r.a, TO_MHZ * r.b, TO_MHZ * r.c])
+            .collect();
+        Self {
+            harm: value.harms,
+            fund: value.funds,
+            corr: value.corrs,
+            geom: Molecule::default(),
+            irreps: value.irreps,
+            lxm: vec![],
+            rots,
+            // TODO this needs to be returned in spectro
+            rot_equil: vec![],
+            deltas: value.quartic.into(),
+            phis: value.sextic.into(),
+            fermi: HashMap::new(),
+            coriolis: Coriol::default(),
+            // TODO this needs to be returned in spectro
+            zpt: 0.0,
+            curvils: vec![],
+            ralpha: vec![],
+            requil: vec![],
+        }
+    }
+}
+
+impl From<spectro::quartic::Quartic> for Delta {
+    fn from(value: spectro::quartic::Quartic) -> Self {
+        Self {
+            big_delta_j: Some(value.delj * TO_MHZ),
+            big_delta_k: Some(value.delk * TO_MHZ),
+            big_delta_jk: Some(value.deljk * TO_MHZ),
+            delta_j: Some(value.sdelj * TO_MHZ),
+            delta_k: Some(value.sdelk * TO_MHZ),
+            d_j: Some(value.dj * TO_MHZ),
+            d_jk: Some(value.djk * TO_MHZ),
+            d_k: Some(value.dk * TO_MHZ),
+            d1: Some(value.sd1 * TO_MHZ),
+            d2: Some(value.sd2 * TO_MHZ),
+            // TODO my spectro doesn't compute this
+            de: None,
+        }
+    }
+}
+
+impl From<spectro::sextic::Sextic> for Phi {
+    fn from(value: spectro::sextic::Sextic) -> Self {
+        // TODO depending on the rotor type, these are either A or S. they
+        // aren't different values like the quartics
+        Self {
+            big_phi_j: Some(value.phij * TO_MHZ),
+            big_phi_k: Some(value.phik * TO_MHZ),
+            big_phi_jk: Some(value.phijk * TO_MHZ),
+            big_phi_kj: Some(value.phikj * TO_MHZ),
+            phi_j: Some(value.sphij * TO_MHZ),
+            phi_jk: Some(value.sphijk * TO_MHZ),
+            phi_k: Some(value.sphik * TO_MHZ),
+            h_j: Some(value.phij * TO_MHZ),
+            h_jk: Some(value.phik * TO_MHZ),
+            h_kj: Some(value.phijk * TO_MHZ),
+            h_k: Some(value.phikj * TO_MHZ),
+            h1: Some(value.sphij * TO_MHZ),
+            h2: Some(value.sphijk * TO_MHZ),
+            h3: Some(value.sphik * TO_MHZ),
+            // TODO not computed by my spectro
+            he: None,
+        }
     }
 }

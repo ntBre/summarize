@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use clap::Parser;
 
 use summarize::Summary;
@@ -157,7 +159,18 @@ fn main() {
         return;
     }
 
-    let summaries: Vec<_> = args.infiles.iter().map(Summary::new).collect();
+    let mut summaries = Vec::new();
+    for infile in args.infiles {
+        let path = Path::new(&infile);
+        let ext = path.extension().unwrap_or_default();
+        if ext == "json" {
+            let f = std::fs::File::open(&infile).unwrap();
+            let output: spectro::Output = serde_json::from_reader(f).unwrap();
+            summaries.push(Summary::from(output));
+        } else {
+            summaries.push(Summary::new(infile));
+        }
+    }
 
     if args.vib {
         just_vib(&summaries);
