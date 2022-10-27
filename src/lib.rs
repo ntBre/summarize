@@ -30,7 +30,7 @@ macro_rules! write_dist_consts {
 }
 
 mod delta;
-mod phi;
+pub mod phi;
 
 pub mod curvil {
     use serde::Serialize;
@@ -55,7 +55,14 @@ const ROTRANS_THRSH: f64 = 30.0;
 /// threshold for computing irrep symmetries
 const SYMM_EPS: f64 = 1e-4;
 
-const TO_MHZ: f64 = 29979.2458;
+pub const TO_MHZ: f64 = 29979.2458;
+
+/// for use with map
+pub fn to_mhz(v: &f64) -> f64 {
+    v * TO_MHZ
+}
+
+const DEBUG: bool = false;
 
 lazy_static! {
     /// default weights used in SPECTRO
@@ -601,16 +608,20 @@ impl Summary {
             let mut irrep = mol.irrep_approx(&pg, eps);
             while let Err(e) = irrep {
                 if eps >= 0.1 {
-                    eprintln!(
+                    if DEBUG {
+                        eprintln!(
                         "failed to compute irrep {i} for\n{}\nin {} with {e:?}",
                         mol, pg
                     );
+                    }
                     // give up and give A
                     irrep = Ok(symm::Irrep::A);
                     break;
                 }
                 eps *= 10.0;
-                eprintln!("warning: raising epsilon to {:.1e}", eps);
+                if DEBUG {
+                    eprintln!("warning: raising epsilon to {:.1e}", eps);
+                }
                 irrep = mol.irrep_approx(&pg, eps);
             }
             self.irreps.push(irrep.unwrap());
@@ -703,6 +714,7 @@ impl From<spectro::Output> for Summary {
             .iter()
             .map(|r| vec![TO_MHZ * r.a, TO_MHZ * r.b, TO_MHZ * r.c])
             .collect();
+        let rot_equil = value.rot_equil.iter().map(to_mhz).collect();
         Self {
             harm: value.harms,
             fund: value.funds,
@@ -711,14 +723,13 @@ impl From<spectro::Output> for Summary {
             irreps: value.irreps,
             lxm: vec![],
             rots,
-            // TODO this needs to be returned in spectro
-            rot_equil: vec![],
+            rot_equil,
             deltas: value.quartic.into(),
             phis: value.sextic.into(),
             fermi: HashMap::new(),
             coriolis: Coriol::default(),
-            // TODO this needs to be returned in spectro
-            zpt: 0.0,
+            zpt: value.zpt,
+            // these are not computed by my spectro
             curvils: vec![],
             ralpha: vec![],
             requil: vec![],
@@ -747,8 +758,6 @@ impl From<spectro::quartic::Quartic> for Delta {
 
 impl From<spectro::sextic::Sextic> for Phi {
     fn from(value: spectro::sextic::Sextic) -> Self {
-        // TODO depending on the rotor type, these are either A or S. they
-        // aren't different values like the quartics
         Self {
             big_phi_j: Some(value.phij * TO_MHZ),
             big_phi_k: Some(value.phik * TO_MHZ),
@@ -757,13 +766,13 @@ impl From<spectro::sextic::Sextic> for Phi {
             phi_j: Some(value.sphij * TO_MHZ),
             phi_jk: Some(value.sphijk * TO_MHZ),
             phi_k: Some(value.sphik * TO_MHZ),
-            h_j: Some(value.phij * TO_MHZ),
-            h_jk: Some(value.phik * TO_MHZ),
-            h_kj: Some(value.phijk * TO_MHZ),
-            h_k: Some(value.phikj * TO_MHZ),
-            h1: Some(value.sphij * TO_MHZ),
-            h2: Some(value.sphijk * TO_MHZ),
-            h3: Some(value.sphik * TO_MHZ),
+            h_j: Some(value.hj * TO_MHZ),
+            h_jk: Some(value.hjk * TO_MHZ),
+            h_kj: Some(value.hkj * TO_MHZ),
+            h_k: Some(value.hk * TO_MHZ),
+            h1: Some(value.h1 * TO_MHZ),
+            h2: Some(value.h2 * TO_MHZ),
+            h3: Some(value.h3 * TO_MHZ),
             // TODO not computed by my spectro
             he: None,
         }
