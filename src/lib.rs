@@ -29,7 +29,7 @@ macro_rules! write_dist_consts {
     };
 }
 
-mod delta;
+pub mod delta;
 pub mod phi;
 
 pub mod curvil {
@@ -750,8 +750,7 @@ impl From<spectro::quartic::Quartic> for Delta {
             d_k: Some(value.dk * TO_MHZ),
             d1: Some(value.sd1 * TO_MHZ),
             d2: Some(value.sd2 * TO_MHZ),
-            // TODO my spectro doesn't compute this
-            de: None,
+            de: Some(value.de * TO_MHZ),
         }
     }
 }
@@ -773,8 +772,7 @@ impl From<spectro::sextic::Sextic> for Phi {
             h1: Some(value.h1 * TO_MHZ),
             h2: Some(value.h2 * TO_MHZ),
             h3: Some(value.h3 * TO_MHZ),
-            // TODO not computed by my spectro
-            he: None,
+            he: Some(value.he * TO_MHZ),
         }
     }
 }
