@@ -230,6 +230,12 @@ impl Summary {
             Ok(f) => f,
             Err(e) => panic!("failed to open {} with '{}'", filename, e),
         };
+        let ext = filename.as_ref().extension().unwrap_or_default();
+        if ext == "json" {
+            let f = std::fs::File::open(&filename).unwrap();
+            let output: spectro::Output = serde_json::from_reader(f).unwrap();
+            return Summary::from(output);
+        }
         let lines = BufReader::new(f).lines().flatten();
 
         let mut state = State::None;
@@ -719,9 +725,9 @@ impl From<spectro::Output> for Summary {
             harm: value.harms,
             fund: value.funds,
             corr: value.corrs,
-            geom: Molecule::default(),
+            geom: value.geom,
             irreps: value.irreps,
-            lxm: vec![],
+            lxm: value.lxm,
             rots,
             rot_equil,
             deltas: value.quartic.into(),
