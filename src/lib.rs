@@ -439,13 +439,13 @@ impl Summary {
                         .nth(2)
                         .unwrap()
                         .parse::<f64>()
-                        .unwrap()
+                        .unwrap_or(f64::NAN)
                         * TO_MHZ,
                 );
             } else if DELTA.is_match(&line) {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
                 if sp.len() > 3 {
-                    let v: f64 = sp[4].parse().unwrap();
+                    let v: f64 = sp[4].parse().unwrap_or(f64::NAN);
                     match (sp[0], sp[1]) {
                         // A reduction
                         ("DELTA", "J") => ret.deltas.big_delta_j = Some(v),
@@ -466,14 +466,14 @@ impl Summary {
                     }
                 } else {
                     // linear
-                    ret.deltas.de = Some(sp[2].parse().unwrap());
+                    ret.deltas.de = Some(sp[2].parse().unwrap_or(f64::NAN));
                 }
             } else if PHI.is_match(&line) {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
                 if sp.len() > 3 {
                     // phi is in Hz in the file, so turn it to MHz
                     let v: f64 =
-                        sp[4].replace('D', "E").parse::<f64>().unwrap() / 1e6;
+                        sp[4].replace('D', "E").parse::<f64>().unwrap_or(f64::NAN) / 1e6;
                     match (sp[0], sp[1]) {
                         // A reduction
                         ("PHI", "J") => ret.phis.big_phi_j = Some(v),
@@ -499,7 +499,7 @@ impl Summary {
                 } else {
                     // linear molecule
                     ret.phis.he = Some(
-                        sp[2].replace('D', "E").parse::<f64>().unwrap() / 1e6,
+                        sp[2].replace('D', "E").parse::<f64>().unwrap_or(f64::NAN) / 1e6,
                     );
                 }
             } else if FERMI.is_match(&line) {
