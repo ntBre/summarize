@@ -400,9 +400,11 @@ impl Summary {
                 }
                 let mut v: Vec<_> = fields
                     .iter()
-                    .map(|s| s.parse().unwrap_or(BAD_FLOAT) * TO_MHZ)
+                    .map(|s| s.parse().unwrap_or(f64::NAN) * TO_MHZ)
                     .collect();
-                v.sort_by(|a, b| b.partial_cmp(a).unwrap());
+                v.sort_by(|a, b| {
+                    b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal)
+                });
                 ret.rots.push(v);
             } else if state == State::RotS && rot_good {
                 let mut one = false;
@@ -423,9 +425,13 @@ impl Summary {
                 }
                 let mut v: Vec<_> = fields
                     .iter()
-                    .map(|s| s.parse().unwrap_or(BAD_FLOAT) * TO_MHZ)
+                    .map(|s| s.parse().unwrap_or(f64::NAN) * TO_MHZ)
                     .collect();
-                v.sort_by(|a, b| b.abs().partial_cmp(&a.abs()).unwrap());
+                v.sort_by(|a, b| {
+                    b.abs()
+                        .partial_cmp(&a.abs())
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                });
                 // for linear molecules, there is only one unique rotational
                 // constant, reported twice, and the third one is zero. sorting
                 // by abs moves the real one to the front. for some reason,
@@ -472,8 +478,11 @@ impl Summary {
                 let sp: Vec<&str> = line.split_ascii_whitespace().collect();
                 if sp.len() > 3 {
                     // phi is in Hz in the file, so turn it to MHz
-                    let v: f64 =
-                        sp[4].replace('D', "E").parse::<f64>().unwrap_or(f64::NAN) / 1e6;
+                    let v: f64 = sp[4]
+                        .replace('D', "E")
+                        .parse::<f64>()
+                        .unwrap_or(f64::NAN)
+                        / 1e6;
                     match (sp[0], sp[1]) {
                         // A reduction
                         ("PHI", "J") => ret.phis.big_phi_j = Some(v),
@@ -499,7 +508,11 @@ impl Summary {
                 } else {
                     // linear molecule
                     ret.phis.he = Some(
-                        sp[2].replace('D', "E").parse::<f64>().unwrap_or(f64::NAN) / 1e6,
+                        sp[2]
+                            .replace('D', "E")
+                            .parse::<f64>()
+                            .unwrap_or(f64::NAN)
+                            / 1e6,
                     );
                 }
             } else if FERMI.is_match(&line) {
