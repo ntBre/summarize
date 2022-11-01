@@ -766,8 +766,8 @@ impl Display for Summary {
 
 impl From<spectro::Output> for Summary {
     fn from(value: spectro::Output) -> Self {
-        let rot_equil;
-        let rots;
+        let mut rot_equil;
+        let mut rots: Vec<Vec<f64>>;
         if value.linear {
             rot_equil = vec![value.rot_equil[1] * TO_MHZ];
             rots = value
@@ -782,6 +782,27 @@ impl From<spectro::Output> for Summary {
                 .iter()
                 .map(|r| vec![TO_MHZ * r.a, TO_MHZ * r.b, TO_MHZ * r.c])
                 .collect();
+        }
+        // spectro reported 3 but two of them are the same
+        if rot_equil.len() == 3 {
+            let r = &rots[0];
+            let (a, b, c) = (r[0], r[1], r[2]);
+            let k = (2.0 * b - a - c) / (a - c);
+            if (k.abs() - 1.0).abs() < 1e-6 {
+                rot_equil = vec![
+                    value.rot_equil[0] * TO_MHZ,
+                    value.rot_equil[2] * TO_MHZ,
+                ];
+                // assertion again to guard against other symmetric top type
+                rots = value
+                    .rots
+                    .iter()
+                    .map(|r| {
+                        assert!((r.a - r.b).abs() < 1e-5);
+                        vec![TO_MHZ * r.a, TO_MHZ * r.c]
+                    })
+                    .collect();
+            }
         }
         Self {
             harm: value.harms,

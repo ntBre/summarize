@@ -313,6 +313,15 @@ where
                     } else {
                         None
                     }
+                } else if sum.rot_equil.len() == 2 {
+                    // symmetric top - only have A and C
+                    if j == 0 {
+                        sum.rot_equil.first()
+                    } else if j == 2 {
+                        sum.rot_equil.last()
+                    } else {
+                        None
+                    }
                 } else {
                     sum.rot_equil.get(j)
                 };
@@ -346,6 +355,14 @@ where
                         let abc = if rot.len() == 1 {
                             if j == 1 {
                                 rot.first()
+                            } else {
+                                None
+                            }
+                        } else if rot.len() == 2 {
+                            if j == 0 {
+                                rot.first()
+                            } else if j == 2 {
+                                rot.last()
                             } else {
                                 None
                             }
