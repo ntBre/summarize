@@ -728,12 +728,23 @@ impl Display for Summary {
 
 impl From<spectro::Output> for Summary {
     fn from(value: spectro::Output) -> Self {
-        let rots = value
-            .rots
-            .iter()
-            .map(|r| vec![TO_MHZ * r.a, TO_MHZ * r.b, TO_MHZ * r.c])
-            .collect();
-        let rot_equil = value.rot_equil.iter().map(to_mhz).collect();
+        let rot_equil;
+        let rots;
+        if value.linear {
+            rot_equil = vec![value.rot_equil[1] * TO_MHZ];
+            rots = value
+                .rots
+                .iter()
+                .map(|r| vec![TO_MHZ * r.b + rot_equil[0]])
+                .collect();
+        } else {
+            rot_equil = value.rot_equil.iter().map(to_mhz).collect();
+            rots = value
+                .rots
+                .iter()
+                .map(|r| vec![TO_MHZ * r.a, TO_MHZ * r.b, TO_MHZ * r.c])
+                .collect();
+        }
         Self {
             harm: value.harms,
             fund: value.funds,
