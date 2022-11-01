@@ -26,9 +26,14 @@ fn load_mat(filename: &str) -> Vec<Vec<f64>> {
 macro_rules! check {
     ($got:expr, $want:expr) => {
         assert_eq!($got.harm.len(), $want.harm.len());
+        assert_eq!($got.harm, $want.harm);
         assert_eq!($got.fund.len(), $want.fund.len());
+        assert_eq!($got.fund, $want.fund);
         assert_eq!($got.corr.len(), $want.corr.len());
+        assert_eq!($got.corr, $want.corr);
         assert_eq!($got.lxm.len(), $want.lxm.len());
+        assert_eq!($got.lxm, $want.lxm);
+        assert_eq!($got.zpt, $want.zpt);
         assert_eq!($got.irreps, $want.irreps);
         assert_eq!($got.rots.len(), $want.rots.len());
         assert_eq!($got.rots, $want.rots);
@@ -612,6 +617,84 @@ H   -1.3465409      1.3195405      0.0000000
         zpt: 8904.3886,
         // this one actually doesn't have curvils in input
         curvils: vec![],
+        ralpha: vec![],
+        requil: vec![],
+    };
+    check!(got, want);
+}
+
+#[test]
+fn nh3() {
+    let got = Summary::new("testfiles/nh3.out");
+    let want = Summary {
+        harm: vec![3478.529, 1056.96, 3610.259, 1675.576],
+        fund: vec![3308.481, 980.789, 3435.441, 1628.367],
+        corr: vec![3339.0722, 980.7895, 3435.4405, 1628.3675],
+        geom: Molecule::from_str(
+            "
+H      0.00000000  0.93712480 -0.31497400
+N      0.00000000  0.00000000  0.06800760
+H      0.81157390 -0.46856240 -0.31497400
+H     -0.81157390 -0.46856240 -0.31497400
+",
+        )
+        .unwrap(),
+        irreps: vec![App, App, App, App, App, App],
+        lxm: load_mat("testfiles/nh3.lxm"),
+        rots: vec![
+            vec![296055.36363659287, 186191.23848778097],
+            vec![291459.023616576, 184890.91868045178],
+            vec![293442.5029823842, 184366.47674404946],
+            vec![290548.5898967249, 185787.2141879835],
+            vec![302593.315506696, 184015.22790855833],
+            vec![286862.6805986345, 183590.59887312257],
+            vec![290829.64232817537, 182541.71500031796],
+            vec![285041.816156857, 185383.18988818608],
+            vec![309131.2673767991, 181839.21732933572],
+        ],
+        rot_equil: vec![298628.66367804405, 190333.73469733],
+        deltas: Delta {
+            big_delta_j: None,
+            big_delta_k: None,
+            big_delta_jk: None,
+            delta_j: None,
+            delta_k: None,
+            d_j: Some(22.0919735144),
+            d_jk: Some(-39.0714271953),
+            d_k: Some(22.2750749384),
+            d1: Some(-1.1109e-6),
+            d2: Some(-1.148e-7),
+            de: None,
+        },
+        phis: Phi {
+            big_phi_j: None,
+            big_phi_k: None,
+            big_phi_jk: None,
+            big_phi_kj: None,
+            phi_j: None,
+            phi_jk: None,
+            phi_k: None,
+            h_j: Some(0.0052053651950000005),
+            h_jk: Some(-0.017930476679999998),
+            h_kj: Some(0.020987878680000002),
+            h_k: Some(-0.0077988569360000004),
+            h1: Some(-2.81997107e-7),
+            h2: Some(8.733022962e-8),
+            h3: Some(-0.0001582976867),
+            he: None,
+        },
+        fermi: HashMap::from([(3, vec![(4, 4)])]),
+        coriolis: Coriol::default(),
+        zpt: 7448.0683,
+        // this one actually doesn't have curvils in input
+        curvils: vec![
+            Bond(1, 2),
+            Bond(2, 3),
+            Bond(2, 4),
+            Angle(2, 1, 3),
+            Angle(2, 1, 4),
+            Angle(2, 3, 4),
+        ],
         ralpha: vec![],
         requil: vec![],
     };

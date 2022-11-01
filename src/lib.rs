@@ -195,6 +195,7 @@ enum State {
     Lxm,
     RotA,
     RotS,
+    RotLin,
     Fermi1,
     Fermi2,
     Coriolis,
@@ -373,11 +374,14 @@ impl Summary {
                 rot_good = true;
             } else if rot_good && line.contains("BZA") {
                 state = State::RotA;
-            } else if rot_good
-                && ret.deltas.de.is_some()
-                && line.contains("BZS")
-            {
-                state = State::RotS;
+            } else if rot_good && line.contains("BZS") {
+                if ret.deltas.de.is_some() {
+                    // linear molecule
+                    state = State::RotLin;
+                } else if ret.rot_equil.len() == 2 {
+                    // symmetric top
+                    state = State::RotS;
+                }
             } else if COORD.is_match(&line) {
                 state = State::Coords;
                 skip = 12 + i32::from(ret.rot_equil.len() == 1);
@@ -406,7 +410,7 @@ impl Summary {
                     b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal)
                 });
                 ret.rots.push(v);
-            } else if state == State::RotS && rot_good {
+            } else if state == State::RotLin && rot_good {
                 let mut one = false;
                 for state in &rot_states {
                     if (*state == "1" && one) || *state == "2" {
@@ -438,6 +442,40 @@ impl Summary {
                 // spectro also reports it as the difference from equilibrium so
                 // add to that.
                 ret.rots.push(vec![v[0] + ret.rot_equil[0]]);
+            } else if state == State::RotS && rot_good {
+                let mut one = false;
+                for state in &rot_states {
+                    if (*state == "1" && one) || *state == "2" {
+                        continue 'outer;
+                    } else if *state == "1" {
+                        one = true;
+                    }
+                }
+                rot_states.clear();
+                state = State::None;
+                let fields: Vec<_> = line.split_whitespace().collect();
+                if fields.len() != 3 {
+                    // this says "sad hack" next to it in the Go version, not
+                    // sure why yet
+                    continue;
+                }
+                let mut v: Vec<_> = fields
+                    .iter()
+                    .map(|s| s.parse().unwrap_or(f64::NAN) * TO_MHZ)
+                    .collect();
+                v.sort_by(|a, b| {
+                    b.abs()
+                        .partial_cmp(&a.abs())
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                });
+                // for symmetric top molecules, there are only two unique
+                // rotational constants, but spectro still reports a and b
+                // separately. we typically handle this by averaging the a and b
+                // in the output file and reporting the remaining two constants
+                // as a and c. it might be different for the other type of
+                // symmetric top so leave this assertion for now
+                assert!((v[0] - v[1]).abs() < 0.1);
+                ret.rots.push(vec![(v[0] + v[1]) / 2.0, v[2]]);
             } else if line.contains("Be") {
                 // line like  ' (Be =    1.64769 IN CM-1)'
                 ret.rot_equil.push(
