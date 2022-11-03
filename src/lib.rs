@@ -469,13 +469,17 @@ impl Summary {
                         .unwrap_or(std::cmp::Ordering::Equal)
                 });
                 // for symmetric top molecules, there are only two unique
-                // rotational constants, but spectro still reports a and b
-                // separately. we typically handle this by averaging the a and b
-                // in the output file and reporting the remaining two constants
-                // as a and c. it might be different for the other type of
-                // symmetric top so leave this assertion for now
-                assert!((v[0] - v[1]).abs() < 0.1);
-                ret.rots.push(vec![(v[0] + v[1]) / 2.0, v[2]]);
+                // rotational constants, but spectro still reports them
+                // separately. we typically handle this by averaging the two
+                // close ones in the output file and reporting the remaining two
+                // constants as a and c.
+                if (v[0] - v[1]).abs() < 0.1 {
+                    ret.rots.push(vec![(v[0] + v[1]) / 2.0, v[2]]);
+                } else if (v[1] - v[2]).abs() < 0.1 {
+                    ret.rots.push(vec![v[0], (v[1] + v[2]) / 2.0]);
+                } else {
+                    ret.rots.push(v);
+                }
             } else if line.contains("Be") {
                 // line like  ' (Be =    1.64769 IN CM-1)'
                 ret.rot_equil.push(
