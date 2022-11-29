@@ -23,7 +23,7 @@ macro_rules! write_dist_consts {
     ($w:ident, $struct:ident, $($field:ident => $name:expr$(,)?),*) => {
 	$(
 	    if let Some(d) = $struct.$field {
-		write!($w, "{:<13}{:18.10}", $name, d)?;
+		writeln!($w, "{:<13}{:18.10}", $name, d)?;
 	    }
 	)*
     };
@@ -773,7 +773,7 @@ impl Display for Summary {
         writeln!(f, "{:5}{:^15}{:^15}{:^15}", "State", "A", "B", "C")?;
         writeln!(
             f,
-            "{:>5}{:15.7}{:15.7}{:15.7}",
+            "{:>5}{:15.1}{:15.1}{:15.1}",
             "e", self.rot_equil[0], self.rot_equil[1], self.rot_equil[2]
         )?;
         for (i, rot) in self.rots.iter().enumerate() {
@@ -781,7 +781,7 @@ impl Display for Summary {
             // sort in descending order
             v.sort_by(|a, b| b.partial_cmp(a).unwrap());
             let (a, b, c) = (v[0], v[1], v[2]);
-            writeln!(f, "{:5}{:15.7}{:15.7}{:15.7}", i, a, b, c)?;
+            writeln!(f, "{:5}{:15.1}{:15.1}{:15.1}", i, a, b, c)?;
         }
 
         writeln!(f, "\nQuartic Distortion Constants (MHz):")?;
