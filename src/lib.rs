@@ -13,7 +13,7 @@ use delta::Delta;
 use lazy_static::lazy_static;
 use phi::Phi;
 use regex::Regex;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use symm::{Atom, Irrep, Molecule};
 
 #[cfg(test)]
@@ -33,10 +33,10 @@ pub mod delta;
 pub mod phi;
 
 pub mod curvil {
-    use serde::Serialize;
+    use serde::{Deserialize, Serialize};
 
     /// represented only by the indices into the geometry
-    #[derive(Debug, PartialEq, Serialize)]
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
     pub enum Curvil {
         Bond(usize, usize),
         Angle(usize, usize, usize),
@@ -100,7 +100,7 @@ lazy_static! {
     static ref CURVIL: Regex = Regex::new(r"^ CURVILINEAR INTERNAL COORDINATES").unwrap();
 }
 
-#[derive(Default, Debug, PartialEq, Serialize)]
+#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Summary {
     /// harmonic vibrational frequencies
     pub harm: Vec<f64>,
@@ -159,11 +159,37 @@ pub struct Summary {
 mod coriolis {
     use std::collections::HashMap;
 
-    use serde::{ser::SerializeStruct, Serialize};
+    use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
     #[derive(Default, Debug, PartialEq)]
     pub struct Coriol {
         pub data: HashMap<(usize, usize), Vec<usize>>,
+    }
+
+    /// simpler representation for almost trivially implementing Serialize and
+    /// Deserialize
+    #[derive(Deserialize)]
+    struct DummyCoriol {
+        modes: Vec<(usize, usize)>,
+        axes: Vec<Vec<usize>>,
+    }
+
+    impl From<DummyCoriol> for Coriol {
+        fn from(value: DummyCoriol) -> Self {
+            Self {
+                data: value.modes.into_iter().zip(value.axes).collect(),
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Coriol {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            let s = DummyCoriol::deserialize(deserializer)?;
+            Ok(s.into())
+        }
     }
 
     impl Serialize for Coriol {

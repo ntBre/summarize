@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Default, PartialEq, Serialize)]
+#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Delta {
     /// these constants are in the A-reduced Watson Hamiltonian
     pub big_delta_j: Option<f64>,
