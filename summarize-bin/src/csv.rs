@@ -46,6 +46,7 @@ impl Format for Csv {
                 sum.geom.atoms[*b - 1].label(),
                 sum.geom.atoms[*c - 1].label()
             ),
+            Opb(_, _, _, _) => todo!(),
         }
     }
 }

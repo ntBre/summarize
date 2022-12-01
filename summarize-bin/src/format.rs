@@ -531,6 +531,7 @@ where
                     Curvil::Angle(_, _, _) => (AFTER, 3),
                     Curvil::Linear(_, _, _) => (AFTER - 2, 3),
                     Curvil::Torsion(_, _, _, _) => todo!(),
+                    Curvil::Opb(_, _, _, _) => todo!(),
                 };
                 writeln!(
                     f,

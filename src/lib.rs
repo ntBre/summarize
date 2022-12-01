@@ -44,6 +44,9 @@ pub mod curvil {
 
         /// a linear bend
         Linear(usize, usize, usize),
+
+        /// an out-of-plane bend
+        Opb(usize, usize, usize, usize),
     }
 }
 
@@ -678,6 +681,17 @@ impl Summary {
                             .flat_map(usize::from_str)
                             .collect();
                         Linear(ids[0], ids[1], ids[2])
+                    }
+                    "OUT-OF-PLANE" => {
+                        // the label is actually "OUT-OF-PLANE BEND" so we have
+                        // to re-process the line
+                        let v = new_line.split_ascii_whitespace();
+                        let ids: Vec<_> = v
+                            .skip(2)
+                            .step_by(2)
+                            .flat_map(usize::from_str)
+                            .collect();
+                        Opb(ids[0], ids[1], ids[2], ids[3])
                     }
                     _ => panic!("unrecognized curvil type {typ}"),
                 });
