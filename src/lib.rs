@@ -85,6 +85,8 @@ lazy_static! {
         ("31.9720707", 16),
         ("34.9688527", 17),
         ("39.9623837", 18),
+	("39.9625906", 20),
+	("47.9479473", 22),
     ]);
     static ref HEADER: Regex = Regex::new(r"^(\s*\d+)+\s*$").unwrap();
     static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
