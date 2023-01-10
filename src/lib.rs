@@ -260,7 +260,7 @@ impl Summary {
     {
         let f = match std::fs::File::open(&filename) {
             Ok(f) => f,
-            Err(e) => panic!("failed to open {} with '{}'", filename, e),
+            Err(e) => panic!("failed to open {filename} with '{e}'"),
         };
         let ext = filename.as_ref().extension().unwrap_or_default();
         if ext == "json" {
@@ -713,8 +713,7 @@ impl Summary {
                 if eps >= 0.1 {
                     if DEBUG {
                         eprintln!(
-                        "failed to compute irrep {i} for\n{}\nin {} with {e:?}",
-                        mol, pg
+                        "failed to compute irrep {i} for\n{mol}\nin {pg} with {e:?}"
                     );
                     }
                     // give up and give A
@@ -723,7 +722,7 @@ impl Summary {
                 }
                 eps *= 10.0;
                 if DEBUG {
-                    eprintln!("warning: raising epsilon to {:.1e}", eps);
+                    eprintln!("warning: raising epsilon to {eps:.1e}");
                 }
                 irrep = mol.irrep_approx(&pg, eps);
             }
@@ -791,7 +790,7 @@ impl Display for Summary {
             f,
             "{:>5}{:15.1}{:15.1}{:15.1}",
             "e",
-            self.rot_equil.get(0).unwrap_or(&0.0),
+            self.rot_equil.first().unwrap_or(&0.0),
             self.rot_equil.get(1).unwrap_or(&0.0),
             self.rot_equil.get(2).unwrap_or(&0.0)
         )?;
@@ -800,11 +799,11 @@ impl Display for Summary {
             // sort in descending order
             v.sort_by(|a, b| b.partial_cmp(a).unwrap());
             let (a, b, c) = (
-                v.get(0).unwrap_or(&0.0),
+                v.first().unwrap_or(&0.0),
                 v.get(1).unwrap_or(&0.0),
                 v.get(2).unwrap_or(&0.0),
             );
-            writeln!(f, "{:5}{:15.1}{:15.1}{:15.1}", i, a, b, c)?;
+            writeln!(f, "{i:5}{a:15.1}{b:15.1}{c:15.1}")?;
         }
 
         writeln!(f, "\nQuartic Distortion Constants (MHz):")?;
