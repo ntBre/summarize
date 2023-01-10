@@ -88,8 +88,8 @@ lazy_static! {
         ("31.9720707", 16),
         ("34.9688527", 17),
         ("39.9623837", 18),
-	("39.9625906", 20),
-	("47.9479473", 22),
+    ("39.9625906", 20),
+    ("47.9479473", 22),
     ]);
     static ref HEADER: Regex = Regex::new(r"^(\s*\d+)+\s*$").unwrap();
     static ref DISP: Regex = Regex::new(r"^\d+$").unwrap();
@@ -790,13 +790,20 @@ impl Display for Summary {
         writeln!(
             f,
             "{:>5}{:15.1}{:15.1}{:15.1}",
-            "e", self.rot_equil[0], self.rot_equil[1], self.rot_equil[2]
+            "e",
+            self.rot_equil.get(0).unwrap_or(&0.0),
+            self.rot_equil.get(1).unwrap_or(&0.0),
+            self.rot_equil.get(2).unwrap_or(&0.0)
         )?;
         for (i, rot) in self.rots.iter().enumerate() {
             let mut v = rot.clone();
             // sort in descending order
             v.sort_by(|a, b| b.partial_cmp(a).unwrap());
-            let (a, b, c) = (v[0], v[1], v[2]);
+            let (a, b, c) = (
+                v.get(0).unwrap_or(&0.0),
+                v.get(1).unwrap_or(&0.0),
+                v.get(2).unwrap_or(&0.0),
+            );
             writeln!(f, "{:5}{:15.1}{:15.1}{:15.1}", i, a, b, c)?;
         }
 
