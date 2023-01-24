@@ -200,11 +200,14 @@ impl State {
 impl Summary {
     pub fn new<P>(filename: P) -> Self
     where
-        P: AsRef<Path> + std::fmt::Display,
+        P: AsRef<Path> + std::fmt::Debug,
     {
+        if filename.as_ref().is_dir() {
+            panic!("{filename:#?} is a directory");
+        }
         let f = match std::fs::File::open(&filename) {
             Ok(f) => f,
-            Err(e) => panic!("failed to open {filename} with '{e}'"),
+            Err(e) => panic!("failed to open {filename:#?} with '{e}'"),
         };
         let ext = filename.as_ref().extension().unwrap_or_default();
         if ext == "json" {
