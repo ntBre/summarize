@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Delta {
@@ -20,6 +20,25 @@ pub struct Delta {
 
     /// linear molecules only
     pub de: Option<f64>,
+}
+
+impl Delta {
+    /// return the unwrapped fields of `self` as a single vector
+    pub fn to_vec(&self) -> Vec<f64> {
+        vec![
+            self.big_delta_j.unwrap_or(0.0),
+            self.big_delta_k.unwrap_or(0.0),
+            self.big_delta_jk.unwrap_or(0.0),
+            self.delta_j.unwrap_or(0.0),
+            self.delta_k.unwrap_or(0.0),
+            self.d_j.unwrap_or(0.0),
+            self.d_jk.unwrap_or(0.0),
+            self.d_k.unwrap_or(0.0),
+            self.d1.unwrap_or(0.0),
+            self.d2.unwrap_or(0.0),
+            self.de.unwrap_or(0.0),
+        ]
+    }
 }
 
 impl Display for Delta {

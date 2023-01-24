@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Phi {
@@ -22,6 +22,29 @@ pub struct Phi {
     pub h3: Option<f64>,
     // linear molecules
     pub he: Option<f64>,
+}
+
+impl Phi {
+    /// return the unwrapped fields of `self` as a single vector
+    pub fn to_vec(&self) -> Vec<f64> {
+        vec![
+            self.big_phi_j.unwrap_or(0.0),
+            self.big_phi_k.unwrap_or(0.0),
+            self.big_phi_jk.unwrap_or(0.0),
+            self.big_phi_kj.unwrap_or(0.0),
+            self.phi_j.unwrap_or(0.0),
+            self.phi_jk.unwrap_or(0.0),
+            self.phi_k.unwrap_or(0.0),
+            self.h_j.unwrap_or(0.0),
+            self.h_jk.unwrap_or(0.0),
+            self.h_kj.unwrap_or(0.0),
+            self.h_k.unwrap_or(0.0),
+            self.h1.unwrap_or(0.0),
+            self.h2.unwrap_or(0.0),
+            self.h3.unwrap_or(0.0),
+            self.he.unwrap_or(0.0),
+        ]
+    }
 }
 
 impl Display for Phi {
