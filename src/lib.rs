@@ -57,7 +57,7 @@ const BAD_FLOAT: f64 = 999999999.9;
 const ROTRANS_THRSH: f64 = 30.0;
 
 /// threshold for computing irrep symmetries
-const SYMM_EPS: f64 = 1e-4;
+pub const SYMM_EPS: f64 = 1e-4;
 
 pub const TO_MHZ: f64 = 29979.2458;
 
@@ -197,8 +197,14 @@ impl State {
     }
 }
 
+#[derive(Clone, Copy)]
+pub enum Recompute {
+    Yes(f64),
+    No,
+}
+
 impl Summary {
-    pub fn new<P>(filename: P) -> Self
+    pub fn new<P>(filename: P, recompute: Recompute) -> Self
     where
         P: AsRef<Path> + std::fmt::Debug,
     {
@@ -213,7 +219,13 @@ impl Summary {
         if ext == "json" {
             let f = std::fs::File::open(&filename).unwrap();
             let output: spectro::Output = serde_json::from_reader(f).unwrap();
-            return Summary::from(output);
+            let mut ret = Summary::from(output);
+            if let Recompute::Yes(eps) = recompute {
+                eprintln!("recomputing irreps");
+                ret.irreps = Vec::new();
+                ret.compute_irreps(eps);
+            }
+            return ret;
         }
         let lines = BufReader::new(f).lines().flatten();
 
@@ -646,22 +658,26 @@ impl Summary {
         }
         let pairs = zip(lxm_freqs, &ret.lxm).collect::<Vec<_>>();
         ret.lxm = pairs.iter().map(|p| p.1.clone()).collect();
-        ret.compute_irreps();
+        ret.compute_irreps(SYMM_EPS);
         ret
     }
 
-    fn compute_irreps(&mut self) {
+    /// compute irreps for the geometry and LXM matrix in `self`. compute the
+    /// point group with SYMM_EPS but use starting_eps to determine the irreps
+    /// within it
+    fn compute_irreps(&mut self, starting_eps: f64) {
         let pg = self.geom.point_group_approx(SYMM_EPS);
         for (i, disp) in self.lxm.iter().enumerate() {
             let mol = self.geom.clone() + disp.clone();
-            let mut eps = SYMM_EPS;
+            let mut eps = starting_eps;
             let mut irrep = mol.irrep_approx(&pg, eps);
             while let Err(e) = irrep {
                 if eps >= 0.1 {
                     if DEBUG {
                         eprintln!(
-                        "failed to compute irrep {i} for\n{mol}\nin {pg} with {e:?}"
-                    );
+                            "failed to compute irrep {i} for\
+			     \n{mol}\nin {pg} with {e:?}"
+                        );
                     }
                     // give up and give A
                     irrep = Ok(symm::Irrep::A);

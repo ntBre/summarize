@@ -55,6 +55,7 @@ impl Format for Latex {
                 symm::Irrep::A1pp => "a_1''",
                 symm::Irrep::A2pp => "a_2''",
                 symm::Irrep::Epp => "e''",
+                symm::Irrep::E => "e",
             }
         )
     }

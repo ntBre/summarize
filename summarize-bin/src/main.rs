@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use summarize::Summary;
+use summarize::{Recompute, Summary, SYMM_EPS};
 
 use crate::{csv::Csv, latex::Latex, org::Org, text::Text};
 
@@ -116,6 +116,14 @@ struct Args {
     #[arg(short, long, conflicts_with_all = ["tex", "json", "csv"])]
     org: bool,
 
+    /// if reading a rust spectro output file (file ending with .json),
+    /// recompute the point group and irreps from the geometry and LXM matrix
+    #[arg(short, long, default_value_t = false)]
+    recompute_irreps: bool,
+
+    #[arg(short, long, default_value_t = SYMM_EPS)]
+    eps_irreps: f64,
+
     infiles: Vec<String>,
 }
 
@@ -157,7 +165,17 @@ fn main() {
         return;
     }
 
-    let summaries: Vec<_> = args.infiles.iter().map(Summary::new).collect();
+    let recompute = if args.recompute_irreps {
+        Recompute::Yes(args.eps_irreps)
+    } else {
+        Recompute::No
+    };
+
+    let summaries: Vec<_> = args
+        .infiles
+        .iter()
+        .map(|f| Summary::new(f, recompute))
+        .collect();
 
     if args.vib {
         just_vib(&summaries);
