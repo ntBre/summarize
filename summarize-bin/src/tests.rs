@@ -10,7 +10,10 @@ fn text() {
         "../testfiles/c2h4.out",
         "../testfiles/allyl.out",
     ];
-    let summaries: Vec<_> = summaries.iter().map(Summary::new).collect();
+    let summaries: Vec<_> = summaries
+        .iter()
+        .map(|f| Summary::new(f, summarize::Recompute::No))
+        .collect();
     let mut got = String::new();
     write!(got, "{}", Text(summaries)).unwrap();
 
@@ -31,7 +34,10 @@ fn latex() {
         "../testfiles/c2h4.out",
         "../testfiles/allyl.out",
     ];
-    let summaries: Vec<_> = summaries.iter().map(Summary::new).collect();
+    let summaries: Vec<_> = summaries
+        .iter()
+        .map(|f| Summary::new(f, summarize::Recompute::No))
+        .collect();
     let mut got = String::new();
     write!(got, "{}", Latex(summaries)).unwrap();
 
