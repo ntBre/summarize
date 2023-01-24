@@ -218,15 +218,10 @@ impl Summary {
         let ext = filename.as_ref().extension().unwrap_or_default();
         if ext == "json" {
             let f = std::fs::File::open(&filename).unwrap();
-            let mut output: spectro::Output =
-                serde_json::from_reader(f).unwrap();
-            let mut lxm = Vec::new();
-            for col in &output.lxm_ids {
-                lxm.push(output.lxm[*col].clone());
-            }
-            output.lxm = lxm;
+            let output: spectro::Output = serde_json::from_reader(f).unwrap();
             let mut ret = Summary::from(output);
             if let Recompute::Yes(eps) = recompute {
+                eprintln!("recomputing irreps");
                 ret.irreps = Vec::new();
                 ret.compute_irreps(eps);
             }

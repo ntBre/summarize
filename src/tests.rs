@@ -51,7 +51,7 @@ macro_rules! check {
 
 #[test]
 fn c3h2() {
-    let got = Summary::new("testfiles/spectro.out", Recompute::No);
+    let got = Summary::new("testfiles/spectro.out");
     let want = Summary {
         harm: vec![
             3281.362, 3247.646, 1623.590, 1307.445, 1090.564, 992.798, 908.650,
@@ -161,7 +161,7 @@ H                  1.5951933      0.9069249      0.0000000
 
 #[test]
 fn c2h4() {
-    let got = Summary::new("testfiles/c2h4.out", Recompute::No);
+    let got = Summary::new("testfiles/c2h4.out");
     let want = Summary {
         harm: vec![
             3247.609, 3221.841, 3154.890, 3140.072, 1670.825, 1477.408,
@@ -286,7 +286,7 @@ fn c2h4() {
 
 #[test]
 fn degmode() {
-    let got = Summary::new("testfiles/degmode.out", Recompute::No);
+    let got = Summary::new("testfiles/degmode.out");
     let want = Summary {
         harm: vec![2929.500, 2834.256, 2236.673, 939.167, 791.065],
         fund: vec![2886.379, 2799.917, 2221.068, 936.105, 797.174],
@@ -361,7 +361,7 @@ fn degmode() {
 
 #[test]
 fn allyl() {
-    let got = Summary::new("testfiles/allyl.out", Recompute::No);
+    let got = Summary::new("testfiles/allyl.out");
     let want = Summary {
         harm: vec![
             3253.47, 3250.966, 3214.569, 3141.939, 3139.941, 1625.315, 1556.29,
@@ -520,7 +520,7 @@ H    2.1461889     -0.2660770      0.0000000
 
 #[test]
 fn c3h3() {
-    let got = Summary::new("testfiles/c3h3.out", Recompute::No);
+    let got = Summary::new("testfiles/c3h3.out");
     let want = Summary {
         harm: vec![
             2703.543, 2654.315, 2654.289, 1840.347, 1187.899, 1187.834,
@@ -625,7 +625,7 @@ H   -1.3465409      1.3195405      0.0000000
 
 #[test]
 fn nh3() {
-    let got = Summary::new("testfiles/nh3.out", Recompute::No);
+    let got = Summary::new("testfiles/nh3.out");
     let want = Summary {
         harm: vec![3478.529, 1056.96, 3610.259, 1675.576],
         fund: vec![3308.481, 980.789, 3435.441, 1628.367],
