@@ -58,6 +58,10 @@ impl Format for Latex {
                 symm::Irrep::E => "e",
                 symm::Irrep::Bg => "b_g",
                 symm::Irrep::Bu => "b_u",
+                symm::Irrep::E2p => "e_2'",
+                symm::Irrep::E1p => "e_1'",
+                symm::Irrep::E2 => "e_2",
+                symm::Irrep::E1 => "e_1",
             }
         )
     }
