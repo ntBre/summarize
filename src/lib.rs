@@ -221,7 +221,7 @@ impl Summary {
             let output: spectro::Output = serde_json::from_reader(f).unwrap();
             let mut ret = Summary::from(output);
             if let Recompute::Yes(eps) = recompute {
-                eprintln!("recomputing irreps");
+                eprint!("recomputing irreps in ");
                 ret.irreps = Vec::new();
                 ret.compute_irreps(eps);
             }
@@ -666,7 +666,8 @@ impl Summary {
     /// point group with SYMM_EPS but use starting_eps to determine the irreps
     /// within it
     fn compute_irreps(&mut self, starting_eps: f64) {
-        let pg = self.geom.point_group_approx(SYMM_EPS);
+        let pg = self.geom.point_group_approx(starting_eps);
+        eprintln!("{pg}");
         for (i, disp) in self.lxm.iter().enumerate() {
             let mol = self.geom.clone() + disp.clone();
             let mut eps = starting_eps;
