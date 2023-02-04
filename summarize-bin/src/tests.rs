@@ -1,5 +1,5 @@
 use std::{fmt::Write, fs::read_to_string};
-use summarize::Summary;
+use summarize::{Recompute, Summary};
 
 use crate::{latex::Latex, text::Text};
 
@@ -10,7 +10,10 @@ fn text() {
         "../testfiles/c2h4.out",
         "../testfiles/allyl.out",
     ];
-    let summaries: Vec<_> = summaries.iter().map(Summary::new).collect();
+    let summaries: Vec<_> = summaries
+        .iter()
+        .map(|s| Summary::new(s, Recompute::No))
+        .collect();
     let mut got = String::new();
     write!(got, "{}", Text(summaries)).unwrap();
 
@@ -31,7 +34,10 @@ fn latex() {
         "../testfiles/c2h4.out",
         "../testfiles/allyl.out",
     ];
-    let summaries: Vec<_> = summaries.iter().map(Summary::new).collect();
+    let summaries: Vec<_> = summaries
+        .iter()
+        .map(|s| Summary::new(s, Recompute::No))
+        .collect();
     let mut got = String::new();
     write!(got, "{}", Latex(summaries)).unwrap();
 
