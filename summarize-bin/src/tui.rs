@@ -32,18 +32,17 @@ impl App {
     fn data(&self, height: u16) -> Vec<(String, u64)> {
         let mut data = Vec::new();
         let mut max = 0.0;
-        for (i, (a, b)) in self.summaries[0]
+        for (a, b) in self.summaries[0]
             .harm
             .iter()
             .zip(self.summaries[1].harm.iter())
-            .enumerate()
         {
             // absolute value for now to simplify height calculations
             let diff = (a - b).abs();
             if diff > max {
                 max = diff;
             }
-            data.push((format!("ω{}", i + 1), diff));
+            data.push((format!("{diff:6.1}"), diff));
         }
         let mut ret = Vec::new();
         for (s, d) in data.into_iter() {
@@ -131,8 +130,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .bar_gap(BAR_GAP)
         .bar_width((r.width - nbars * BAR_GAP - MARGIN_WIDTH) / nbars)
         .bar_style(Style::default().fg(Color::Yellow))
-	// can't figure out how to disable the value labels, so make them the
-	// same color as the background
+        // can't figure out how to disable the value labels, so make them the
+        // same color as the background
         .value_style(Style::default().fg(Color::Yellow).bg(Color::Yellow));
     f.render_widget(barchart, chunks[0]);
 }

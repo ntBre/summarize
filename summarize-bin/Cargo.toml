@@ -13,5 +13,5 @@ regex = "1.5.5"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 spectro = { path = "/home/brent/Projects/spectro/spectro" }
-tui = { path = "/home/brent/Projects/tui-rs" }
+tui = "0.19"
 crossterm = "0.25"
