@@ -18,11 +18,11 @@ impl Format for Latex {
     }
 
     fn omega(&self, idx: usize) -> String {
-        format!(r"$\omega_{{{:<2}}}$", idx)
+        format!(r"$\omega_{{{idx:<2}}}$")
     }
 
     fn nu(&self, idx: usize) -> String {
-        format!(r"$\nu_{{{:<2}}}$", idx)
+        format!(r"$\nu_{{{idx:<2}}}$")
     }
 
     fn line(_: usize) -> String {

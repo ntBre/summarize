@@ -191,11 +191,10 @@ fn main() {
 
 \begin{{document}}
 
-{}
+{summaries}
 
 \end{{document}}
-",
-            summaries
+"
         );
     } else if args.json {
         println!("\n{}", serde_json::to_string_pretty(&summaries).unwrap());

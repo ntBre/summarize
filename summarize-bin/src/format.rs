@@ -34,12 +34,12 @@ where
 
     /// return the label for the harmonic frequencies. idx starts at 1
     fn omega(&self, idx: usize) -> String {
-        format!("w{:<2}", idx)
+        format!("w{idx:<2}")
     }
 
     /// return the label for the anharmonic frequencies. idx starts at 1
     fn nu(&self, idx: usize) -> String {
-        format!("v{:<2}", idx)
+        format!("v{idx:<2}")
     }
 
     /// return the desired format for an irrep
@@ -222,7 +222,7 @@ where
             }
             writeln!(f)?;
         }
-        writeln!(f, "{}", dashes)?;
+        writeln!(f, "{dashes}")?;
         write!(f, "{} ZPT{}", self.pre(), self.sep())?;
         for (i, sum) in self.into_iter().enumerate() {
             write!(
@@ -412,7 +412,7 @@ where
                 let r = &sum.rots[0];
                 let (a, b, c) = (r[0], r[1], r[2]);
                 let k = (2.0 * b - a - c) / (a - c);
-                write!(f, "{:WIDTH$.7}", k)?;
+                write!(f, "{k:WIDTH$.7}")?;
             } else {
                 write!(f, "{:WIDTH$.7}", "")?;
             }

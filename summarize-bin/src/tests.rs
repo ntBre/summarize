@@ -22,7 +22,7 @@ fn text() {
     if got != want {
         use std::io::Write;
         let mut f = std::fs::File::create("/tmp/got").unwrap();
-        write!(f, "{}", got).unwrap();
+        write!(f, "{got}").unwrap();
         panic!(r#" (diff "/tmp/got" "summarize-bin/testfiles/want.txt") "#);
     }
 }
@@ -46,7 +46,7 @@ fn latex() {
     if got != want {
         use std::io::Write;
         let mut f = std::fs::File::create("/tmp/got").unwrap();
-        write!(f, "{}", got).unwrap();
+        write!(f, "{got}").unwrap();
         panic!(r#" (diff "/tmp/got" "summarize-bin/testfiles/want.tex") "#);
     }
 }
