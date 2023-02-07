@@ -4,6 +4,8 @@ use summarize::{Recompute, Summary, SYMM_EPS};
 
 use crate::{csv::Csv, latex::Latex, org::Org, text::Text};
 
+mod tui;
+
 /// macro for generating max_* methods on `Text`, inspired by this
 /// https://github.com/jonhoo/fantoccini/pull/186#discussion_r990712599
 /// suggestion and by the actual implementation
@@ -124,6 +126,10 @@ struct Args {
     #[arg(short, long, default_value_t = SYMM_EPS)]
     eps_irreps: f64,
 
+    /// launch the tui application to diff two qffs
+    #[arg(short, long, default_value_t = false)]
+    diff: bool,
+
     infiles: Vec<String>,
 }
 
@@ -176,6 +182,16 @@ fn main() {
         .iter()
         .map(|f| Summary::new(f, recompute))
         .collect();
+
+    if args.diff {
+        if summaries.len() != 2 {
+            eprintln!("usage: summarize -d FILE1 FILE2");
+            return;
+        }
+
+        tui::run_tui(summaries).unwrap();
+        return;
+    }
 
     if args.vib {
         just_vib(&summaries);
