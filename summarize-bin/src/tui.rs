@@ -20,23 +20,72 @@ use tui::{
     Frame, Terminal,
 };
 
+enum State {
+    Harm,
+    Fund,
+    Corr,
+}
+
+impl State {
+    fn next(&self) -> State {
+        use State::*;
+        match self {
+            Harm => Fund,
+            Fund => Corr,
+            Corr => Harm,
+        }
+    }
+
+    fn prev(&self) -> State {
+        use State::*;
+        match self {
+            Harm => Corr,
+            Fund => Harm,
+            Corr => Fund,
+        }
+    }
+
+    fn title(&self) -> &'static str {
+        use State::*;
+        match self {
+            Harm => "Harmonic Frequencies",
+            Fund => "Fundamental Frequencies",
+            Corr => "Corrected Frequencies",
+        }
+    }
+}
+
 struct App {
     summaries: Vec<Summary>,
+    state: State,
 }
 
 impl App {
     fn new(summaries: Vec<Summary>) -> Self {
-        Self { summaries }
+        Self {
+            summaries,
+            state: State::Harm,
+        }
     }
 
     fn data(&self, height: u16) -> Vec<(String, u64)> {
         let mut data = Vec::new();
         let mut max = 0.0;
-        for (a, b) in self.summaries[0]
-            .harm
-            .iter()
-            .zip(self.summaries[1].harm.iter())
-        {
+        let pairs = match self.state {
+            State::Harm => self.summaries[0]
+                .harm
+                .iter()
+                .zip(self.summaries[1].harm.iter()),
+            State::Fund => self.summaries[0]
+                .fund
+                .iter()
+                .zip(self.summaries[1].fund.iter()),
+            State::Corr => self.summaries[0]
+                .corr
+                .iter()
+                .zip(self.summaries[1].corr.iter()),
+        };
+        for (a, b) in pairs {
             // absolute value for now to simplify height calculations
             let diff = (a - b).abs();
             if diff > max {
@@ -83,7 +132,7 @@ pub fn run_tui(summaries: Vec<Summary>) -> Result<(), Box<dyn Error>> {
 
 fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
-    app: App,
+    mut app: App,
     tick_rate: Duration,
 ) -> io::Result<()> {
     let mut last_tick = Instant::now();
@@ -97,6 +146,12 @@ fn run_app<B: Backend>(
             if let Event::Key(key) = event::read()? {
                 if let KeyCode::Char('q') = key.code {
                     return Ok(());
+                }
+                if let KeyCode::Char('j') = key.code {
+                    app.state = app.state.next();
+                }
+                if let KeyCode::Char('k') = key.code {
+                    app.state = app.state.prev();
                 }
             }
         }
@@ -123,7 +178,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let barchart = BarChart::default()
         .block(
             Block::default()
-                .title("Harmonic Frequencies".to_string())
+                .title(app.state.title())
                 .borders(Borders::ALL),
         )
         .data(&v)
