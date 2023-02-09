@@ -15,8 +15,8 @@ use summarize::Summary;
 use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
-    widgets::{BarChart, Block, Borders},
+    style::{Color, Style, Modifier},
+    widgets::{BarChart, Block, Borders, Row, Table, TableState},
     Frame, Terminal,
 };
 
@@ -55,9 +55,20 @@ impl State {
     }
 }
 
+macro_rules! field {
+    ($summary:expr, $state:expr) => {
+        match $state {
+            State::Harm => &$summary.harm,
+            State::Fund => &$summary.fund,
+            State::Corr => &$summary.corr,
+        }
+    };
+}
+
 struct App {
     summaries: Vec<Summary>,
     state: State,
+    table_state: TableState,
 }
 
 impl App {
@@ -65,6 +76,7 @@ impl App {
         Self {
             summaries,
             state: State::Harm,
+            table_state: TableState::default(),
         }
     }
 
@@ -98,6 +110,61 @@ impl App {
             ret.push((s, (d / max * height as f64) as u64));
         }
         ret
+    }
+
+    fn rows(&self) -> usize {
+        let [a, b] = &self.summaries[..] else { unimplemented!() };
+        a.harm.len().min(b.harm.len())
+    }
+
+    fn table<'a, 'b>(&'a self) -> Table<'b> {
+        let mut rows = Vec::new();
+        let [a, b] = &self.summaries[..] else { unimplemented!() };
+        let end = self.rows();
+        let label = match self.state {
+            State::Harm => "ω",
+            State::Fund => "ν",
+            State::Corr => "ν",
+        };
+        for i in 0..end {
+            rows.push(
+                Row::new(vec![
+                    format!("{:>5}", format!("{label}{}", i + 1)),
+                    format!("{:8.1}", field!(a, self.state)[i]),
+                    format!("{:8.1}", field!(b, self.state)[i]),
+                ])
+                .style(Style::default().fg(Color::Black)),
+            );
+        }
+        Table::new(rows)
+    }
+
+    fn next_row(&mut self) {
+        let i = match self.table_state.selected() {
+            Some(i) => {
+                if i >= self.rows() - 1 {
+                    i
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        self.table_state.select(Some(i));
+    }
+
+    fn prev_row(&mut self) {
+        let i = match self.table_state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    i
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        self.table_state.select(Some(i));
     }
 }
 
@@ -137,7 +204,7 @@ fn run_app<B: Backend>(
 ) -> io::Result<()> {
     let mut last_tick = Instant::now();
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| ui(f, &mut app))?;
 
         let timeout = tick_rate
             .checked_sub(last_tick.elapsed())
@@ -146,8 +213,10 @@ fn run_app<B: Backend>(
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') => return Ok(()),
-                    KeyCode::Char('j') => app.state = app.state.next(),
-                    KeyCode::Char('k') => app.state = app.state.prev(),
+                    KeyCode::Char('n') => app.state = app.state.next(),
+                    KeyCode::Char('p') => app.state = app.state.prev(),
+                    KeyCode::Char('j') => app.next_row(),
+                    KeyCode::Char('k') => app.prev_row(),
                     _ => {}
                 }
             }
@@ -158,7 +227,7 @@ fn run_app<B: Backend>(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     const MARGIN_WIDTH: u16 = 2;
     const BAR_GAP: u16 = 1;
     let r = f.size();
@@ -169,6 +238,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             [Constraint::Percentage(50), Constraint::Percentage(50)].as_ref(),
         )
         .split(f.size());
+
     let data = &app.data(r.height);
     let nbars = data.len() as u16;
     let v: Vec<_> = data.iter().map(|(a, b)| (a.as_ref(), *b)).collect();
@@ -186,4 +256,28 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         // same color as the background
         .value_style(Style::default().fg(Color::Yellow).bg(Color::Yellow));
     f.render_widget(barchart, chunks[0]);
+
+    let mode = format!("{:>5}", "Mode");
+    let mol1 = format!("{:>8}", "Mol. 1");
+    let mol2 = format!("{:>8}", "Mol. 2");
+    let table = app.table();
+    let selected_style = Style::default().add_modifier(Modifier::REVERSED);
+    let table = table
+        .header(
+            Row::new(vec![mode.as_str(), mol1.as_str(), mol2.as_str()])
+                .style(Style::default().fg(Color::Yellow))
+                .height(1),
+        )
+        .block(
+            Block::default()
+                .title(app.state.title())
+                .borders(Borders::ALL),
+        )
+        .widths(&[
+            Constraint::Length(8),
+            Constraint::Length(8),
+            Constraint::Length(8),
+        ])
+        .column_spacing(1).highlight_style(selected_style);
+    f.render_stateful_widget(table, chunks[1], &mut app.table_state);
 }
