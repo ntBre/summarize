@@ -119,6 +119,11 @@ impl App {
         a.harm.len().min(b.harm.len())
     }
 
+    // this is actually a false positive by clippy. removing these lifetimes
+    // stops this from compiling because the generic on Table is filled by the
+    // lifetime of self and then I can't borrow self as mutable after calling
+    // table
+    #[allow(clippy::needless_lifetimes)]
     fn table<'a, 'b>(&'a self) -> Table<'b> {
         let mut rows = Vec::new();
         let [a, b] = &self.summaries[..] else { unimplemented!() };
