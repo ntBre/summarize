@@ -4,6 +4,7 @@ use crate::{format::Format, impl_display};
 
 pub(crate) struct Text {
     pub summaries: Vec<Summary>,
+    pub names: Vec<String>,
 }
 
 impl_display!(Text);
@@ -48,6 +49,10 @@ impl Format for Text {
             ),
             Opb(_, _, _, _) => todo!(),
         }
+    }
+
+    fn names(&self) -> &[String] {
+        &self.names
     }
 }
 

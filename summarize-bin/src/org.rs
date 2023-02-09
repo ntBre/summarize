@@ -7,6 +7,7 @@ use crate::{
 
 pub(crate) struct Org {
     pub summaries: Vec<Summary>,
+    pub names: Vec<String>,
 }
 
 impl_display!(Org);
@@ -79,6 +80,10 @@ impl Format for Org {
             ),
             Opb(_, _, _, _) => todo!(),
         }
+    }
+
+    fn names(&self) -> &[String] {
+        &self.names
     }
 }
 

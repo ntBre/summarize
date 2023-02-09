@@ -15,7 +15,8 @@ fn text() {
         .map(|s| Summary::new(s, Recompute::No))
         .collect();
     let mut got = String::new();
-    write!(got, "{}", Text { summaries }).unwrap();
+    let names = default_names(&summaries);
+    write!(got, "{}", Text { summaries, names }).unwrap();
 
     let want = read_to_string("testfiles/want.txt").unwrap();
 

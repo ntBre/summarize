@@ -31,6 +31,7 @@ where
     fn max_corrs(&self) -> usize;
     fn max_rots(&self) -> usize;
     fn len(&self) -> usize;
+    fn names(&self) -> &[String];
 
     /// return the label for the harmonic frequencies. idx starts at 1
     fn omega(&self, idx: usize) -> String {
@@ -82,23 +83,24 @@ where
 		 Constants in the Watson S-Reduced Hamiltonian:\n",
             ),
             TableType::Curvil => {
+                let name = &self.names()[n];
                 format!(
                     "Equilibrium and Vibrationally Averaged Curvilinear \
-		     Coordinates for Mol. {} (in Å or °):\n",
-                    n + 1
+		     Coordinates for {} (in Å or °):\n",
+                    name,
                 )
             }
             TableType::Fermi => {
-                format!("Fermi resonances for Mol. {}:\n", n + 1)
+                let name = &self.names()[n];
+                format!("Fermi resonances for {}:\n", name)
             }
             TableType::Coriol => {
+                let name = &self.names()[n];
                 format!(
-                    "Coriolis resonances for Mol. {}:
+                    "Coriolis resonances for {}:
 
 {:>8}{:>8}",
-                    n + 1,
-                    "Modes",
-                    "Axes",
+                    name, "Modes", "Axes",
                 )
             }
         }
@@ -151,7 +153,7 @@ where
             self.sep()
         )?;
         for i in 0..nsum {
-            write!(f, r"{:>8} {}{}", "Mol.", i + 1, self.end(i < nsum - 1))
+            write!(f, r"{:>10}{}", self.names()[i], self.end(i < nsum - 1))
                 .unwrap();
         }
         writeln!(f, "\n{dashes}")?;
@@ -283,7 +285,7 @@ where
             self.sep()
         )?;
         for i in 0..nsum {
-            write!(f, r"{:>14}{}{}", "Mol. ", i + 1, self.end(i < nsum - 1))
+            write!(f, r"{:>15}{}", self.names()[i], self.end(i < nsum - 1))
                 .unwrap();
         }
         writeln!(f)?;

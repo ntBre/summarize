@@ -277,11 +277,11 @@ fn main() {
     } else if args.json {
         println!("\n{}", serde_json::to_string_pretty(&summaries).unwrap());
     } else if args.csv {
-        println!("\n{}", Csv { summaries });
+        println!("\n{}", Csv { summaries, names });
     } else if args.org {
-        println!("\n{}", Org { summaries });
+        println!("\n{}", Org { summaries, names });
     } else {
-        println!("\n{}", Text { summaries });
+        println!("\n{}", Text { summaries, names });
     }
 }
 

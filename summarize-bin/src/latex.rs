@@ -262,6 +262,10 @@ impl Format for Latex {
             crate::Unit::THz => "THz",
         })
     }
+
+    fn names(&self) -> &[String] {
+        &self.names
+    }
 }
 
 impl<'a> IntoIterator for &'a Latex {

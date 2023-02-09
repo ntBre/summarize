@@ -4,6 +4,7 @@ use crate::{format::Format, impl_display};
 
 pub(crate) struct Csv {
     pub summaries: Vec<Summary>,
+    pub names: Vec<String>,
 }
 
 impl_display!(Csv);
@@ -50,6 +51,10 @@ impl Format for Csv {
             ),
             Opb(_, _, _, _) => todo!(),
         }
+    }
+
+    fn names(&self) -> &[String] {
+	&self.names
     }
 }
 
