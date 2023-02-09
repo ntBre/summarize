@@ -5,7 +5,9 @@ use crate::{
     impl_display,
 };
 
-pub(crate) struct Org(pub Vec<Summary>);
+pub(crate) struct Org {
+    pub summaries: Vec<Summary>,
+}
 
 impl_display!(Org);
 
@@ -15,7 +17,7 @@ impl Format for Org {
     const END: &'static str = "|";
 
     fn len(&self) -> usize {
-        self.0.len()
+        self.summaries.len()
     }
 
     fn line(_: usize) -> String {
@@ -54,7 +56,7 @@ impl Format for Org {
 
     fn curvil_label(&self, curvil: &Curvil, i: usize) -> String {
         use Curvil::*;
-        let sum = &self.0[i];
+        let sum = &self.summaries[i];
         match curvil {
             Bond(a, b) => format!(
                 "r({:>2}{a:<2} - {:>2}{b:<2})",
@@ -86,6 +88,6 @@ impl<'a> IntoIterator for &'a Org {
     type IntoIter = std::slice::Iter<'a, Summary>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
+        self.summaries.iter()
     }
 }

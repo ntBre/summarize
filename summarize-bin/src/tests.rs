@@ -15,7 +15,7 @@ fn text() {
         .map(|s| Summary::new(s, Recompute::No))
         .collect();
     let mut got = String::new();
-    write!(got, "{}", Text(summaries)).unwrap();
+    write!(got, "{}", Text { summaries }).unwrap();
 
     let want = read_to_string("testfiles/want.txt").unwrap();
 
@@ -39,7 +39,7 @@ fn latex() {
         .map(|s| Summary::new(s, Recompute::No))
         .collect();
     let mut got = String::new();
-    write!(got, "{}", Latex(summaries)).unwrap();
+    write!(got, "{}", Latex { summaries }).unwrap();
 
     let want = read_to_string("testfiles/want.tex").unwrap();
 

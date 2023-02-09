@@ -5,7 +5,9 @@ use crate::{
     impl_display,
 };
 
-pub(crate) struct Latex(pub Vec<Summary>);
+pub(crate) struct Latex {
+    pub summaries: Vec<Summary>,
+}
 
 impl_display!(Latex);
 
@@ -14,7 +16,7 @@ impl Format for Latex {
     const END: &'static str = r" \\";
 
     fn len(&self) -> usize {
-        self.0.len()
+        self.summaries.len()
     }
 
     fn omega(&self, idx: usize) -> String {
@@ -220,7 +222,7 @@ impl Format for Latex {
 
     fn curvil_label(&self, curvil: &Curvil, i: usize) -> String {
         use Curvil::*;
-        let sum = &self.0[i];
+        let sum = &self.summaries[i];
         match curvil {
             Bond(a, b) => format!(
                 "$r(\\text{{{}}}_{{{a}}} - \\text{{{}}}_{{{b}}})$",
@@ -266,6 +268,6 @@ impl<'a> IntoIterator for &'a Latex {
     type IntoIter = std::slice::Iter<'a, Summary>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
+        self.summaries.iter()
     }
 }

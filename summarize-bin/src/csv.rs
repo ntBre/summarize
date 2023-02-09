@@ -2,7 +2,9 @@ use summarize::{curvil::Curvil, Summary};
 
 use crate::{format::Format, impl_display};
 
-pub(crate) struct Csv(pub Vec<Summary>);
+pub(crate) struct Csv {
+    pub summaries: Vec<Summary>,
+}
 
 impl_display!(Csv);
 
@@ -10,7 +12,7 @@ impl Format for Csv {
     const SEP: &'static str = ",";
 
     fn len(&self) -> usize {
-        self.0.len()
+        self.summaries.len()
     }
 
     fn line(_: usize) -> String {
@@ -25,7 +27,7 @@ impl Format for Csv {
 
     fn curvil_label(&self, curvil: &Curvil, i: usize) -> String {
         use Curvil::*;
-        let sum = &self.0[i];
+        let sum = &self.summaries[i];
         match curvil {
             Bond(a, b) => format!(
                 "r({:>2}{a:<2} - {:>2}{b:<2})",
@@ -57,6 +59,6 @@ impl<'a> IntoIterator for &'a Csv {
     type IntoIter = std::slice::Iter<'a, Summary>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
+        self.summaries.iter()
     }
 }

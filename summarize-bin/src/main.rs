@@ -21,7 +21,7 @@ macro_rules! max_fields {
     ($($field:ident => $name:ident$(,)?),*) => {
 	$(
 	    fn $name(&self) -> usize {
-		self.0.iter().map(|sum| sum.$field.len()).max().unwrap()
+		self.summaries.iter().map(|sum| sum.$field.len()).max().unwrap()
 	    }
 	)*
     };
@@ -262,7 +262,7 @@ fn main() {
     if args.vib {
         just_vib(&summaries);
     } else if args.tex {
-        let summaries = format!("{}", Latex(summaries));
+        let summaries = format!("{}", Latex { summaries });
         let minus = regex::Regex::new(r"(\s+)-(\d)").unwrap();
         let summaries = minus.replace_all(&summaries, "$1$$-$$$2");
         println!(
@@ -281,10 +281,10 @@ fn main() {
     } else if args.json {
         println!("\n{}", serde_json::to_string_pretty(&summaries).unwrap());
     } else if args.csv {
-        println!("\n{}", Csv(summaries));
+        println!("\n{}", Csv { summaries });
     } else if args.org {
-        println!("\n{}", Org(summaries));
+        println!("\n{}", Org { summaries });
     } else {
-        println!("\n{}", Text(summaries));
+        println!("\n{}", Text { summaries });
     }
 }
