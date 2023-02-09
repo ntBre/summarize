@@ -1,3 +1,9 @@
+use std::{
+    io::{BufRead, BufReader},
+    path::Path,
+    str::FromStr,
+};
+
 use clap::Parser;
 
 use summarize::{Recompute, Summary, SYMM_EPS};
@@ -130,6 +136,10 @@ struct Args {
     #[arg(short, long, default_value_t = false)]
     diff: bool,
 
+    /// load plain text data from FILE as the last argument
+    #[arg(short, long, default_value = None)]
+    plain: Option<String>,
+
     infiles: Vec<String>,
 }
 
@@ -164,9 +174,36 @@ fn just_vib(summaries: &Vec<Summary>) {
     }
 }
 
+fn load_plain<P>(p: P) -> Summary
+where
+    P: AsRef<Path>,
+{
+    let f = std::fs::File::open(p).unwrap();
+    let lines = BufReader::new(f).lines();
+    let mut irreps = Vec::new();
+    let mut harm = Vec::new();
+    let mut corr = Vec::new();
+    for line in lines.flatten() {
+        let sp: Vec<_> = line.split_ascii_whitespace().collect();
+        if sp.len() == 3 {
+            // line like SYMM HARM FUND
+            irreps.push(symm::Irrep::from_str(sp[0]).unwrap());
+            harm.push(sp[1].parse().unwrap());
+            corr.push(sp[2].parse().unwrap());
+        }
+    }
+    Summary {
+        harm,
+        fund: corr.clone(),
+        corr,
+        irreps,
+        ..Default::default()
+    }
+}
+
 fn main() {
     let args = Args::parse();
-    if args.infiles.is_empty() {
+    if args.infiles.is_empty() && args.plain.is_none() {
         eprintln!("usage: summarize FILENAME...");
         return;
     }
@@ -177,11 +214,15 @@ fn main() {
         Recompute::No
     };
 
-    let summaries: Vec<_> = args
+    let mut summaries: Vec<_> = args
         .infiles
         .iter()
         .map(|f| Summary::new(f, recompute))
         .collect();
+
+    if let Some(p) = args.plain {
+        summaries.push(load_plain(p));
+    }
 
     if args.diff {
         if summaries.len() != 2 {
