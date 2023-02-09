@@ -144,14 +144,11 @@ fn run_app<B: Backend>(
             .unwrap_or_else(|| Duration::from_secs(0));
         if crossterm::event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
-                if let KeyCode::Char('q') = key.code {
-                    return Ok(());
-                }
-                if let KeyCode::Char('j') = key.code {
-                    app.state = app.state.next();
-                }
-                if let KeyCode::Char('k') = key.code {
-                    app.state = app.state.prev();
+                match key.code {
+                    KeyCode::Char('q') => return Ok(()),
+                    KeyCode::Char('j') => app.state = app.state.next(),
+                    KeyCode::Char('k') => app.state = app.state.prev(),
+                    _ => {}
                 }
             }
         }
