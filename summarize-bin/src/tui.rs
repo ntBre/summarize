@@ -250,7 +250,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )
         .data(&v)
         .bar_gap(BAR_GAP)
-        .bar_width((r.width - nbars * BAR_GAP - MARGIN_WIDTH) / nbars)
+        .bar_width((r.width - nbars * BAR_GAP - MARGIN_WIDTH - 2) / nbars)
         .bar_style(Style::default().fg(Color::Yellow))
         // can't figure out how to disable the value labels, so make them the
         // same color as the background
