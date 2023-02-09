@@ -15,7 +15,7 @@ use summarize::Summary;
 use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style, Modifier},
+    style::{Color, Modifier, Style},
     widgets::{BarChart, Block, Borders, Row, Table, TableState},
     Frame, Terminal,
 };
@@ -127,14 +127,16 @@ impl App {
             State::Corr => "ν",
         };
         for i in 0..end {
-            rows.push(
-                Row::new(vec![
-                    format!("{:>5}", format!("{label}{}", i + 1)),
-                    format!("{:8.1}", field!(a, self.state)[i]),
-                    format!("{:8.1}", field!(b, self.state)[i]),
-                ])
-                .style(Style::default().fg(Color::Black)),
-            );
+            let mut row = vec![
+                format!("{:>5}", format!("{label}{}", i + 1)),
+                format!("{:>8}", a.irreps[i]),
+                format!("{:8.1}", field!(a, self.state)[i]),
+            ];
+            if !self.symm_check() {
+                row.push(format!("{:>8}", b.irreps[i]));
+            }
+            row.push(format!("{:8.1}", field!(b, self.state)[i]));
+            rows.push(Row::new(row).style(Style::default().fg(Color::Black)));
         }
         Table::new(rows)
     }
@@ -165,6 +167,11 @@ impl App {
             None => 0,
         };
         self.table_state.select(Some(i));
+    }
+
+    fn symm_check(&self) -> bool {
+        let [a, b] = &self.summaries[..] else { unimplemented!() };
+        a.irreps == b.irreps
     }
 }
 
@@ -257,14 +264,28 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .value_style(Style::default().fg(Color::Yellow).bg(Color::Yellow));
     f.render_widget(barchart, chunks[0]);
 
-    let mode = format!("{:>5}", "Mode");
-    let mol1 = format!("{:>8}", "Mol. 1");
-    let mol2 = format!("{:>8}", "Mol. 2");
+    let rows = if app.symm_check() {
+        // symmetries are the same, so only one column is needed
+        vec![
+            format!("{:>5}", "Mode"),
+            format!("{:>8}", "Sym."),
+            format!("{:>8}", "Mol. 1"),
+            format!("{:>8}", "Mol. 2"),
+        ]
+    } else {
+        vec![
+            format!("{:>5}", "Mode"),
+            format!("{:>8}", "Sym. 1"),
+            format!("{:>8}", "Mol. 1"),
+            format!("{:>8}", "Sym. 2"),
+            format!("{:>8}", "Mol. 2"),
+        ]
+    };
     let table = app.table();
     let selected_style = Style::default().add_modifier(Modifier::REVERSED);
     let table = table
         .header(
-            Row::new(vec![mode.as_str(), mol1.as_str(), mol2.as_str()])
+            Row::new(rows)
                 .style(Style::default().fg(Color::Yellow))
                 .height(1),
         )
@@ -274,10 +295,13 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 .borders(Borders::ALL),
         )
         .widths(&[
+            Constraint::Length(5),
+            Constraint::Length(8),
             Constraint::Length(8),
             Constraint::Length(8),
             Constraint::Length(8),
         ])
-        .column_spacing(1).highlight_style(selected_style);
+        .column_spacing(1)
+        .highlight_style(selected_style);
     f.render_stateful_widget(table, chunks[1], &mut app.table_state);
 }
