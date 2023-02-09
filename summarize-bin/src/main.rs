@@ -1,6 +1,7 @@
 use std::{
     io::{BufRead, BufReader},
     path::Path,
+    process::exit,
     str::FromStr,
 };
 
@@ -140,6 +141,11 @@ struct Args {
     #[arg(short, long, default_value = None)]
     plain: Option<String>,
 
+    /// provide a comma-separated list of names to use for the summaries instead
+    /// of Mol. 1, Mol. 2, etc.
+    #[arg(short, long, default_value = None)]
+    names: Option<String>,
+
     infiles: Vec<String>,
 }
 
@@ -224,13 +230,32 @@ fn main() {
         summaries.push(load_plain(p));
     }
 
+    let names = if let Some(names) = args.names {
+        names.split(',').map(|s| s.trim().to_owned()).collect()
+    } else {
+        let mut names = Vec::new();
+        for i in 0..summaries.len() {
+            names.push(format!("Mol. {}", i + 1));
+        }
+        names
+    };
+
+    if names.len() != summaries.len() {
+        eprintln!(
+            "{} names provided for {} summaries",
+            names.len(),
+            summaries.len()
+        );
+        exit(1);
+    }
+
     if args.diff {
         if summaries.len() != 2 {
             eprintln!("usage: summarize -d FILE1 FILE2");
             return;
         }
 
-        tui::run_tui(summaries).unwrap();
+        tui::run_tui(summaries, names).unwrap();
         return;
     }
 

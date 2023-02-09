@@ -67,14 +67,16 @@ macro_rules! field {
 
 struct App {
     summaries: Vec<Summary>,
+    names: Vec<String>,
     state: State,
     table_state: TableState,
 }
 
 impl App {
-    fn new(summaries: Vec<Summary>) -> Self {
+    fn new(summaries: Vec<Summary>, names: Vec<String>) -> Self {
         Self {
             summaries,
+            names,
             state: State::Harm,
             table_state: TableState::default(),
         }
@@ -175,7 +177,10 @@ impl App {
     }
 }
 
-pub fn run_tui(summaries: Vec<Summary>) -> Result<(), Box<dyn Error>> {
+pub fn run_tui(
+    summaries: Vec<Summary>,
+    names: Vec<String>,
+) -> Result<(), Box<dyn Error>> {
     // setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -185,7 +190,7 @@ pub fn run_tui(summaries: Vec<Summary>) -> Result<(), Box<dyn Error>> {
 
     // create app and run it
     let tick_rate = Duration::from_millis(250);
-    let app = App::new(summaries);
+    let app = App::new(summaries, names);
     let res = run_app(&mut terminal, app, tick_rate);
 
     // restore terminal
@@ -269,16 +274,16 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         vec![
             format!("{:>5}", "Mode"),
             format!("{:>8}", "Sym."),
-            format!("{:>8}", "Mol. 1"),
-            format!("{:>8}", "Mol. 2"),
+            format!("{:>8}", app.names[0]),
+            format!("{:>8}", app.names[1]),
         ]
     } else {
         vec![
             format!("{:>5}", "Mode"),
-            format!("{:>8}", "Sym. 1"),
-            format!("{:>8}", "Mol. 1"),
-            format!("{:>8}", "Sym. 2"),
-            format!("{:>8}", "Mol. 2"),
+            format!("{:>8}", "Sym."),
+            format!("{:>8}", app.names[0]),
+            format!("{:>8}", "Sym."),
+            format!("{:>8}", app.names[1]),
         ]
     };
     let table = app.table();
