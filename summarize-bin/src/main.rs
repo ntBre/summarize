@@ -233,11 +233,7 @@ fn main() {
     let names = if let Some(names) = args.names {
         names.split(',').map(|s| s.trim().to_owned()).collect()
     } else {
-        let mut names = Vec::new();
-        for i in 0..summaries.len() {
-            names.push(format!("Mol. {}", i + 1));
-        }
-        names
+        default_names(&summaries)
     };
 
     if names.len() != summaries.len() {
@@ -262,7 +258,7 @@ fn main() {
     if args.vib {
         just_vib(&summaries);
     } else if args.tex {
-        let summaries = format!("{}", Latex { summaries });
+        let summaries = format!("{}", Latex { summaries, names });
         let minus = regex::Regex::new(r"(\s+)-(\d)").unwrap();
         let summaries = minus.replace_all(&summaries, "$1$$-$$$2");
         println!(
@@ -287,4 +283,12 @@ fn main() {
     } else {
         println!("\n{}", Text { summaries });
     }
+}
+
+fn default_names(summaries: &Vec<Summary>) -> Vec<String> {
+    let mut names = Vec::new();
+    for i in 0..summaries.len() {
+        names.push(format!("Mol. {}", i + 1));
+    }
+    names
 }

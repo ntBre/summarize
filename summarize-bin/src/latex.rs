@@ -7,6 +7,7 @@ use crate::{
 
 pub(crate) struct Latex {
     pub summaries: Vec<Summary>,
+    pub names: Vec<String>,
 }
 
 impl_display!(Latex);
@@ -88,8 +89,8 @@ impl Format for Latex {
                     for i in 0..cols / 2 {
                         write!(
                             h,
-                            r"\multicolumn{{2}}{{c}}{{Mol. {}}}{}",
-                            i + 1,
+                            r"\multicolumn{{2}}{{c}}{{{}}}{}",
+                            self.names[i],
                             self.end(i < cols / 2 - 1)
                         )
                         .unwrap();
@@ -142,8 +143,8 @@ impl Format for Latex {
             }
             TableType::Curvil => {
                 let cap = format!(
-                    r"Curvilinear coordinates for Mol. {} (in \AA{{}} or $^\circ$)",
-                    cols + 1,
+                    r"Curvilinear coordinates for {} (in \AA{{}} or $^\circ$)",
+                    self.names[cols],
                 );
                 format!(
                     r"\begin{{table}}
@@ -153,7 +154,7 @@ impl Format for Latex {
                 )
             }
             TableType::Fermi => {
-                let cap = format!(r"Fermi resonances for Mol. {}", cols + 1,);
+                let cap = format!(r"Fermi resonances for {}", self.names[cols]);
                 format!(
                     r"\begin{{table}}
 \centering
@@ -162,7 +163,8 @@ impl Format for Latex {
                 )
             }
             TableType::Coriol => {
-                let cap = format!(r"Coriolis resonances for Mol. {}", cols + 1);
+                let cap =
+                    format!(r"Coriolis resonances for {}", self.names[cols]);
                 format!(
                     r"\begin{{table}}
 \centering

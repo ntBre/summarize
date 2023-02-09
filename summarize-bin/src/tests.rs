@@ -1,7 +1,7 @@
 use std::{fmt::Write, fs::read_to_string};
 use summarize::{Recompute, Summary};
 
-use crate::{latex::Latex, text::Text};
+use crate::{default_names, latex::Latex, text::Text};
 
 #[test]
 fn text() {
@@ -39,7 +39,8 @@ fn latex() {
         .map(|s| Summary::new(s, Recompute::No))
         .collect();
     let mut got = String::new();
-    write!(got, "{}", Latex { summaries }).unwrap();
+    let names = default_names(&summaries);
+    write!(got, "{}", Latex { summaries, names }).unwrap();
 
     let want = read_to_string("testfiles/want.tex").unwrap();
 
