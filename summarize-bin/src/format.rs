@@ -86,13 +86,12 @@ where
                 let name = &self.names()[n];
                 format!(
                     "Equilibrium and Vibrationally Averaged Curvilinear \
-		     Coordinates for {} (in Å or °):\n",
-                    name,
+		     Coordinates for {name} (in Å or °):\n",
                 )
             }
             TableType::Fermi => {
                 let name = &self.names()[n];
-                format!("Fermi resonances for {}:\n", name)
+                format!("Fermi resonances for {name}:\n")
             }
             TableType::Coriol => {
                 let name = &self.names()[n];
