@@ -704,7 +704,11 @@ fn geom_handler(line: &str, state: &mut State, ret: &mut Summary) {
         let atomic_number = match ATOMIC_WEIGHTS.get(fields[4]) {
             Some(a) => *a,
             None => {
-                panic!("atom with weight {} not found, tell Brent!", fields[4])
+                eprintln!(
+                    "atom with weight {} not found, tell Brent!",
+                    fields[4]
+                );
+                0
             }
         };
         if let [x, y, z] = fields[1..=3]
