@@ -534,6 +534,7 @@ dependencies = [
 [[package]]
 name = "symm"
 version = "0.1.0"
+source = "git+https://github.com/ntBre/symm#2cb25050501001decc52f831290a2cac6b5fa162"
 dependencies = [
  "approx",
  "nalgebra",
@@ -554,6 +555,7 @@ dependencies = [
 [[package]]
 name = "tensor"
 version = "0.1.0"
+source = "git+https://github.com/ntBre/tensor#f0000eb50ce004eddd18a736350d1bca300c3774"
 dependencies = [
  "approx",
 ]
