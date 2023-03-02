@@ -72,6 +72,7 @@ lazy_static! {
     /// default weights used in SPECTRO
     static ref ATOMIC_WEIGHTS: HashMap<&'static str, usize> = HashMap::from([
         ("1.0078250", 1),
+        ("2.0141018", 1),
         ("4.0026032", 2),
         ("7.0160030", 3),
         ("9.0121822", 4),
