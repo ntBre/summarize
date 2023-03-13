@@ -498,6 +498,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "spectro"
+version = "0.1.0"
+source = "git+https://github.com/ntBre/spectro#ad037a476ad55c78fce183d3aab2ec53079468a6"
+dependencies = [
+ "nalgebra",
+ "serde",
+ "serde_json",
+ "symm",
+ "tensor",
+]
+
+[[package]]
 name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -512,7 +524,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "spectro",
+ "spectro 0.1.0 (git+https://github.com/ntBre/spectro)",
  "symm",
 ]
 
@@ -525,7 +537,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "spectro",
+ "spectro 0.1.0",
  "summarize",
  "symm",
  "tui",
