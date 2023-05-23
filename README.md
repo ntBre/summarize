@@ -1,3 +1,6 @@
+[![check](https://github.com/ntBre/summarize/actions/workflows/check.yml/badge.svg)](https://github.com/ntBre/summarize/actions/workflows/check.yml)
+[![test](https://github.com/ntBre/summarize/actions/workflows/test.yml/badge.svg)](https://github.com/ntBre/summarize/actions/workflows/test.yml)
+
 # summarize
 summarize the output of chemistry programs
 
