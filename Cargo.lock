@@ -592,7 +592,7 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 [[package]]
 name = "spectro"
 version = "0.1.0"
-source = "git+https://github.com/ntBre/spectro#183537c4f56ac4087c27917138db1030839061f4"
+source = "git+https://github.com/ntBre/spectro#cdbf36b72a9ca171a1be9785ab457edf6b14b082"
 dependencies = [
  "nalgebra",
  "serde",
@@ -637,7 +637,7 @@ dependencies = [
 [[package]]
 name = "symm"
 version = "0.1.0"
-source = "git+https://github.com/ntBre/symm#3772a64a7ddbc095cb6134337a04275d1e26b23a"
+source = "git+https://github.com/ntBre/symm#0954c688eed640a9b66cf1e9e0b6d305d24063c2"
 dependencies = [
  "approx",
  "nalgebra",
