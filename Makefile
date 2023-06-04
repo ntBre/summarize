@@ -23,4 +23,5 @@ woods: build
 	scp -C $(TARGET) 'woods:bin/rsummarize'
 
 install:
-	ln -s $(realpath $(TARGET)) /usr/bin/rsummarize
+	cargo build -p summarize-bin --release
+	sudo ln -s $(realpath target/release/summarize-bin) /usr/bin/summarize
