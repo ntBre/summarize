@@ -4,7 +4,7 @@ ARGS =
 TARGET = target/x86_64-unknown-linux-gnu/release/summarize-bin
 
 clippy:
-	cargo clippy --tests --all
+	cargo clippy --all-targets --all-features --workspace
 
 test:
 	RUST_BACKTRACE=1 cargo test --workspace --no-fail-fast -- ${TESTFLAGS} ${ARGS}
