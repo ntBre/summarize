@@ -634,7 +634,7 @@ dependencies = [
 [[package]]
 name = "symm"
 version = "0.1.0"
-source = "git+https://github.com/ntBre/symm#0954c688eed640a9b66cf1e9e0b6d305d24063c2"
+source = "git+https://github.com/ntBre/symm#dd8b079cff512b7c50625a46ead2f37b07092723"
 dependencies = [
  "approx",
  "nalgebra",
