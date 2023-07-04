@@ -115,7 +115,9 @@ impl App {
     }
 
     fn rows(&self) -> usize {
-        let [a, b] = &self.summaries[..] else { unimplemented!() };
+        let [a, b] = &self.summaries[..] else {
+            unimplemented!()
+        };
         a.harm.len().min(b.harm.len())
     }
 
@@ -126,7 +128,9 @@ impl App {
     #[allow(clippy::needless_lifetimes)]
     fn table<'a, 'b>(&'a self) -> Table<'b> {
         let mut rows = Vec::new();
-        let [a, b] = &self.summaries[..] else { unimplemented!() };
+        let [a, b] = &self.summaries[..] else {
+            unimplemented!()
+        };
         let end = self.rows();
         let label = match self.state {
             State::Harm => "ω",
@@ -177,7 +181,9 @@ impl App {
     }
 
     fn symm_check(&self) -> bool {
-        let [a, b] = &self.summaries[..] else { unimplemented!() };
+        let [a, b] = &self.summaries[..] else {
+            unimplemented!()
+        };
         a.irreps == b.irreps
     }
 }
