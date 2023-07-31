@@ -24,4 +24,4 @@ woods: build
 
 install:
 	cargo build -p summarize-bin --release
-	sudo ln -s $(realpath target/release/summarize-bin) /usr/bin/summarize
+	sudo ln -sf $(realpath target/release/summarize-bin) /usr/bin/summarize
