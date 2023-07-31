@@ -7,7 +7,7 @@ use std::{
 
 use clap::Parser;
 
-use summarize::{Recompute, Summary, SYMM_EPS};
+use summarize::{Recompute, Summary, SYMM_EPS, TO_MHZ};
 
 use crate::{csv::Csv, latex::Latex, org::Org, text::Text};
 
@@ -146,6 +146,10 @@ struct Args {
     #[arg(short, long, default_value = None)]
     names: Option<String>,
 
+    /// output the rotational constants in wavenumbers
+    #[arg(short, long, default_value_t = false)]
+    wavenumbers: bool,
+
     infiles: Vec<String>,
 }
 
@@ -253,6 +257,19 @@ fn main() {
 
         tui::run_tui(summaries, names).unwrap();
         return;
+    }
+
+    if args.wavenumbers {
+        for summary in summaries.iter_mut() {
+            for r in summary.rot_equil.iter_mut() {
+                *r /= TO_MHZ;
+            }
+            for rot in summary.rots.iter_mut() {
+                for r in rot.iter_mut() {
+                    *r /= TO_MHZ;
+                }
+            }
+        }
     }
 
     if args.vib {
