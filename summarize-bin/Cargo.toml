@@ -9,7 +9,7 @@ edition = "2021"
 clap = { version = "4.3.19", features = ["derive"] }
 summarize = { path = ".." }
 symm = { git = "https://github.com/ntBre/symm" }
-regex = "1.9.1"
+regex = "1.9.3"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 spectro = { git = "https://github.com/ntBre/spectro" }
