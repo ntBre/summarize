@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 lazy_static = "1.4.0"
-regex = "1.9.1"
+regex = "1.9.3"
 symm = { git = "https://github.com/ntBre/symm" }
 spectro = { git = "https://github.com/ntBre/spectro" }
 serde_json = "1.0"
