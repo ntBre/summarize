@@ -14,4 +14,4 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 spectro = { git = "https://github.com/ntBre/spectro" }
 tui = "0.19"
-crossterm = "0.26"
+crossterm = "0.27"
