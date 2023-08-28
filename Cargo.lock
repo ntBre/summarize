@@ -529,7 +529,7 @@ checksum = "62bb4feee49fdd9f707ef802e22365a35de4b7b299de4763d44bfea899442ff9"
 [[package]]
 name = "spectro"
 version = "0.1.0"
-source = "git+https://github.com/ntBre/spectro#590475363a2617621134de4474216ae46d07b858"
+source = "git+https://github.com/ntBre/spectro#6b8d7dde8fbb0e365c6aa224134d45107326bf07"
 dependencies = [
  "nalgebra",
  "serde",
