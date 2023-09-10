@@ -826,6 +826,23 @@ impl From<spectro::Output> for Summary {
                     .collect();
             }
         }
+
+        // why can't these be inferred?? the LSP filled it in fine
+        let mut coriolis: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
+        for spectro::Coriolis { i, j, axis } in value.resonances.coriolis {
+            coriolis
+                .entry((i + 1, j + 1))
+                .or_default()
+                .push(axis as usize + 1)
+        }
+        let mut fermi: HashMap<usize, Vec<(usize, usize)>> = HashMap::new();
+        for spectro::Fermi1 { i, j } in value.resonances.fermi1 {
+            fermi.entry(j + 1).or_default().push((i + 1, i + 1));
+        }
+        for spectro::Fermi2 { i, j, k } in value.resonances.fermi2 {
+            fermi.entry(k + 1).or_default().push((i + 1, j + 1));
+        }
+
         Self {
             harm: value.harms,
             fund: value.funds,
@@ -837,8 +854,8 @@ impl From<spectro::Output> for Summary {
             rot_equil,
             deltas: value.quartic.into(),
             phis: value.sextic.into(),
-            fermi: HashMap::new(),
-            coriolis: Coriol::default(),
+            fermi,
+            coriolis: Coriol { data: coriolis },
             zpt: value.zpt,
             // these are not computed by my spectro
             curvils: vec![],
