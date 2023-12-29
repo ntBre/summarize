@@ -193,7 +193,7 @@ where
     let mut irreps = Vec::new();
     let mut harm = Vec::new();
     let mut corr = Vec::new();
-    for line in lines.flatten() {
+    for line in lines.map_while(Result::ok) {
         let sp: Vec<_> = line.split_ascii_whitespace().collect();
         if sp.len() == 3 {
             // line like SYMM HARM FUND
@@ -302,7 +302,7 @@ fn main() {
     }
 }
 
-fn default_names(summaries: &Vec<Summary>) -> Vec<String> {
+fn default_names(summaries: &[Summary]) -> Vec<String> {
     let mut names = Vec::new();
     for i in 0..summaries.len() {
         names.push(format!("Mol. {}", i + 1));

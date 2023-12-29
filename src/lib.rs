@@ -229,7 +229,7 @@ impl Summary {
             }
             return ret;
         }
-        let lines = BufReader::new(f).lines().flatten();
+        let lines = BufReader::new(f).lines().map_while(Result::ok);
 
         let mut state = State::None;
         let mut skip = 0;
