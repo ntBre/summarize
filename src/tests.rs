@@ -1,6 +1,5 @@
 use std::fs::read_to_string;
 
-use crate::coriolis::Coriol;
 use crate::curvil::Curvil::*;
 
 use super::*;
